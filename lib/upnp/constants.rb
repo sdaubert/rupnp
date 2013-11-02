@@ -1,0 +1,7 @@
+module Upnp
+
+  MULTICAST_IP = '239.255.255.250'
+  DISCOVERY_PORT = 1900
+  DEFAULT_TTL = 2
+
+end
