@@ -15,6 +15,16 @@ module RUPNP
       yield @new_device_channel, @bye_device_channel
     end
 
+    def add_device(device)
+      if has_already_device?(device)
+        puts "Device already in database: #{device}"
+      else
+        puts "adding device #{device.udn}"
+        @devices << device
+        @new_device_channel << device
+      end
+    end
+
     def create_device(notification)
       device = Device.new(notification)
 
@@ -37,11 +47,14 @@ module RUPNP
         create_device notification
       end
     end
-  end
 
 
-  def add_device(device)
-    @devices << device
+    private
+
+    def has_already_device?(dev)
+      @devices.any? { |d| d.udn == dev.udn || d.usn == dev.usn }
+    end
+
   end
 
 end

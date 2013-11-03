@@ -28,7 +28,7 @@ module RUPNP
     end
 
     def receive_data(data)
-      ip, port = peer_info
+      port, ip = peer_info
       puts "Response from #{ip}:#{port}"
 
       response = StringIO.new(data)
