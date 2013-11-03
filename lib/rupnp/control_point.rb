@@ -1,4 +1,4 @@
-module Upnp
+module RUPNP
 
   class ControlPoint
 

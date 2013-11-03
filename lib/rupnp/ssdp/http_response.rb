@@ -1,4 +1,4 @@
-module Upnp
+module RUPNP
 
   module SSDP::HTTPResponse
 

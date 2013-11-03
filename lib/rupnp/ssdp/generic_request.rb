@@ -1,7 +1,7 @@
 require 'net/http'
 
 
-module Upnp
+module RUPNP
   module SSDP
 
     class GenericRequest < Net::HTTPGenericRequest

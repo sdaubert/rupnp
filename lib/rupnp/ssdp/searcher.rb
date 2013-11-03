@@ -1,5 +1,5 @@
 
-module Upnp
+module RUPNP
 
   class SSDP::Searcher < SSDP::MulticastConnection
     include SSDP::HTTPResponse

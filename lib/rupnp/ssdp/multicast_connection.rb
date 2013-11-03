@@ -2,7 +2,7 @@ require 'socket'
 require 'ipaddr'
 require 'eventmachine'
 
-module Upnp
+module RUPNP
 
   class SSDP::MulticastConnection < EM::Connection
 

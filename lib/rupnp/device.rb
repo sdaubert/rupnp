@@ -1,9 +1,13 @@
 require 'em-http-request'
 
-module Upnp
+module RUPNP
 
   class Device
     include EM::Deferrable
+
+    HTTP_COMMON_CONFIG = {
+      :head => { :user_agent => USER_AGENT },
+    }
 
     attr_reader :st
     attr_reader :usn
@@ -61,7 +65,7 @@ module Upnp
 
     def get_description(location, getter)
       puts "getting description for #{location}"
-      http = EM::HttpRequest.new(location).get
+      http = EM::HttpRequest.new(location).get HTTP_COMMON_CONFIG
 
       http.errback do |error|
         getter.set_deffered_status :failed, 'Cannot get description'

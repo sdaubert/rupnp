@@ -5,7 +5,7 @@ require_relative 'ssdp/multicast_connection'
 require_relative 'ssdp/searcher'
 
 # @author Sylvain Daubert
-module Upnp
+module RUPNP
 
   module SSDP
 
