@@ -1,5 +1,6 @@
 require 'em-http-request'
 require 'nori'
+require 'ostruct'
 
 module RUPNP
 
@@ -37,11 +38,14 @@ module RUPNP
     attr_reader :udn
     attr_reader :upc
     attr_reader :presentation_url
+    attr_reader :icon_list
 
 
     def initialize(notification)
       @notification = notification
       @parser = Nori.new(:convert_tags_to => ->(tag){ tag.snakecase.to_sym })
+
+      @icon_list = []
     end
 
     def fetch
@@ -69,6 +73,7 @@ module RUPNP
 
         extract_url_base
         extract_device_info
+        extract_icon_list
 
         succeed self
       end
@@ -139,11 +144,14 @@ module RUPNP
     end
 
     def extract_url_base
-      if @upnp_version == '1.0'
-        if @description[:root][:url_base]
-          @url_base =  @description[:root][:url_base]
-        end
+      if @description[:root][:url_base] and @upnp_version != '1.1'
+        @url_base =  @description[:root][:url_base]
+        @url_base += '/' unless @url_base.end_with?('/')
+      else
+        @url_base = @location.match(/[^\/]*\z/).pre_match
       end
+      p @url_base
+      ap @description
     end
 
     def extract_device_info
@@ -160,6 +168,14 @@ module RUPNP
       @udn = device[:udn]
       @upc = device[:upc] || ''
       @presentation_url = device[:presentation_url] || ''
+    end
+
+    def extract_icon_list
+      @description[:root][:device][:icon_list][:icon].each do |h|
+        icon = OpenStruct.new(h)
+        icon.url = @url_base + (icon.url.start_with?('/') ? icon.url[1..-1] : icon.url)
+        @icon_list << icon
+      end
     end
 
   end
