@@ -1,6 +1,7 @@
 require 'em-http-request'
 require 'nori'
 require 'ostruct'
+require_relative 'service'
 
 module RUPNP
 
@@ -26,7 +27,7 @@ module RUPNP
     attr_reader :upnp_version
     attr_reader :xmlns
     attr_reader :url_base # uPnP 1.0 only
-    attr_reader :device_type
+    attr_reader :type
     attr_reader :friendly_name
     attr_reader :manufacturer
     attr_reader :manufacturer_url
@@ -38,14 +39,18 @@ module RUPNP
     attr_reader :udn
     attr_reader :upc
     attr_reader :presentation_url
-    attr_reader :icon_list
+    attr_reader :icons
+    attr_reader :services
+    attr_reader :devices
 
 
     def initialize(notification)
       @notification = notification
       @parser = Nori.new(:convert_tags_to => ->(tag){ tag.snakecase.to_sym })
 
-      @icon_list = []
+      @icons = []
+      @services = []
+      @devices = []
     end
 
     def fetch
@@ -73,7 +78,10 @@ module RUPNP
 
         extract_url_base
         extract_device_info
-        extract_icon_list
+        extract_icons
+
+        extract_services
+        extract_devices
 
         succeed self
       end
@@ -156,7 +164,7 @@ module RUPNP
 
     def extract_device_info
       device = @description[:root][:device]
-      @device_type = device[:device_type]
+      @type = device[:device_type]
       @friendly_name = device[:friendly_name]
       @manufacturer = device[:manufacturer]
       @manufacturer_url = device[:manufacturer_url] || ''
@@ -170,14 +178,48 @@ module RUPNP
       @presentation_url = device[:presentation_url] || ''
     end
 
-    def extract_icon_list
+    def extract_icons
       @description[:root][:device][:icon_list][:icon].each do |h|
         icon = OpenStruct.new(h)
         icon.url = @url_base + (icon.url.start_with?('/') ? icon.url[1..-1] : icon.url)
-        @icon_list << icon
+        @icons << icon
       end
     end
 
-  end
+    def extract_services
+      if @description[:root][:device][:service_list]
+        if @description[:root][:device][:service_list][:service]
+          sl = @description[:root][:device][:service_list][:service]
+          EM::Iterator.new(sl).each do |s, iter|
+            service = Service.new(@url_base, s)
+
+            service.errback do
+              puts "failed to extract service #{s[:service_id]}"
+              iter.next
+            end
+
+            service.callback do |serv|
+              @services << serv
+              ap serv
+              iter.next
+            end
+
+            service.fetch
+          end
+        end
+      end
+    end
+
+    def extract_devices
+      p @description[:root][:device_list]
+      if @description[:root][:device_list]
+        if @description[:root][:device_list][:device]
+          dl = @description[:root][:device_list][:device]
+          #p dl
+        end
+      end
+    end
+
+    end
 
 end
