@@ -2,19 +2,12 @@ require 'em-http-request'
 require 'nori'
 require 'ostruct'
 require_relative 'service'
+require_relative 'base'
+
 
 module RUPNP
 
-  class Device
-    include EM::Deferrable
-
-    HTTP_COMMON_CONFIG = {
-      :head => {
-        :user_agent => USER_AGENT,
-        :host => "#{HOST_IP}:#{DISCOVERY_PORT}",
-      },
-    }
-
+  class Device < Base
     attr_reader :st
     attr_reader :usn
     attr_reader :server
@@ -45,8 +38,8 @@ module RUPNP
 
 
     def initialize(notification)
+      super()
       @notification = notification
-      @parser = Nori.new(:convert_tags_to => ->(tag){ tag.snakecase.to_sym })
 
       @icons = []
       @services = []
@@ -88,7 +81,6 @@ module RUPNP
     end
 
     def extract_from_ssdp_notification(getter)
-      ap @notification
       @st = @notification['st']
       @usn = @notification['usn']
       @server = @notification['server']
@@ -113,30 +105,6 @@ module RUPNP
       end
     end
 
-    def get_description(location, getter)
-      puts "getting description for #{location}"
-      http = EM::HttpRequest.new(location).get(HTTP_COMMON_CONFIG)
-
-      http.errback do |error|
-        getter.set_deffered_status :failed, 'Cannot get description'
-      end
-
-      callback = Proc.new do
-        description = @parser.parse(http.response)
-        puts 'Description received'
-        getter.succeed description
-      end
-
-      http.headers do |h|
-        unless h['SERVER'] =~ /UPnP\/1\.\d/
-          puts "Not a supported UPnP response : #{h['SERVER']}"
-          http.cancel_callback callback
-        end
-      end
-
-      http.callback &callback
-    end
-
     def bad_description?
       if @description[:root]
         bd = false
@@ -158,8 +126,6 @@ module RUPNP
       else
         @url_base = @location.match(/[^\/]*\z/).pre_match
       end
-      p @url_base
-      ap @description
     end
 
     def extract_device_info
@@ -181,7 +147,7 @@ module RUPNP
     def extract_icons
       @description[:root][:device][:icon_list][:icon].each do |h|
         icon = OpenStruct.new(h)
-        icon.url = @url_base + (icon.url.start_with?('/') ? icon.url[1..-1] : icon.url)
+        icon.url = build_url(@url_base, icon.url)
         @icons << icon
       end
     end
