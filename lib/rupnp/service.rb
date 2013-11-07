@@ -27,25 +27,49 @@ module RUPNP
 
     def fetch
       if @scpd_url.empty?
-        fail
+        fail 'no SCPD URL'
         return
       end
 
       scpd_getter = EM::DefaultDeferrable.new
 
       scpd_getter.errback do
-        fail
+        fail "cannot get SCPD from #@scpd_url"
       end
 
       scpd_getter.callback do |scpd|
-        fail unless scpd && !scpd.empty?
+        if !scpd or scpd.empty?
+          fail "SCPD from #@scpd_url is empty"
+          next
+        end
 
-        @xmlns = scpd[:scpd][:@xmlns]
-        # TODO: get spec_version, actions and state_table
+        if bad_description?(scpd)
+          fail 'not a UPNP 1.0/1.1 SCPD'
+          next
+        end
+
         succeed self
       end
 
       get_description @scpd_url, scpd_getter
+    end
+
+
+    private
+
+    def bad_description?(scpd)
+      if scpd[:scpd]
+        bd = false
+        @xmlns = scpd[:scpd][:@xmlns]
+        bd |= @xmlns != "urn:schemas-upnp-org:service-1-0"
+        bd |= scpd[:scpd][:spec_version][:major].to_i != 1
+        @spec_version = scpd[:scpd][:spec_version][:major] + '.'
+        @spec_version += scpd[:scpd][:spec_version][:minor]
+        bd |= !scpd[:scpd][:service_state_table]
+        bd | scpd[:scpd][:service_state_table].empty?
+      else
+        true
+      end
     end
 
   end

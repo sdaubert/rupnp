@@ -158,8 +158,8 @@ module RUPNP
           EM::Iterator.new(sl).each do |s, iter|
             service = Service.new(@url_base, s)
 
-            service.errback do
-              log :error, "failed to extract service #{s[:service_id]}"
+            service.errback do |msg|
+              log :error, "failed to extract service #{s[:service_id]}: #{msg}"
               iter.next
             end
 
