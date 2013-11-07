@@ -5,6 +5,7 @@ require 'eventmachine'
 module RUPNP
 
   class SSDP::MulticastConnection < EM::Connection
+    include LogMixin
 
     def initialize(ttl=nil)
       @ttl = ttl || DEFAULT_TTL

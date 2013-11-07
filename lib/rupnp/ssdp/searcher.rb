@@ -23,17 +23,17 @@ module RUPNP
     def post_init
       @m_search_count.times do
         send_datagram @m_search, MULTICAST_IP, DISCOVERY_PORT
-        puts "send datagram:\n#{@m_search}"
+        log :debug, "send datagram:\n#{@m_search}"
       end
     end
 
     def receive_data(data)
       port, ip = peer_info
-      puts "Response from #{ip}:#{port}"
+      log :debug, "Response from #{ip}:#{port}"
 
       response = StringIO.new(data)
       if !is_http_status_ok?(response)
-        puts "bad HTTP response:\n #{data}"
+        log :error, "bad HTTP response:\n #{data}"
         return
       end
 

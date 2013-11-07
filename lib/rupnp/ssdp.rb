@@ -17,7 +17,6 @@ module RUPNP
 
     def self.search(target=:all, options={})
       options[:search_target] =  KNOWN_TARGETS[target] || target
-      puts "searching..."
       EM.open_datagram_socket '0.0.0.0', 0, SSDP::Searcher, options
     end
 

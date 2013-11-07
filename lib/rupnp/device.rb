@@ -51,7 +51,7 @@ module RUPNP
 
       description_getter.errback do
         msg = "Failed getting description"
-        puts msg
+        log :error, "Fetching device: #{msg}"
         fail self, msg
       end
 
@@ -94,7 +94,6 @@ module RUPNP
       @expiration = if @date.empty?
                       Time.now + max_age
                     else
-                      puts "max-age: #{max_age}"
                       Time.parse(@date) + max_age
                     end
 
@@ -160,7 +159,7 @@ module RUPNP
             service = Service.new(@url_base, s)
 
             service.errback do
-              puts "failed to extract service #{s[:service_id]}"
+              log :error, "failed to extract service #{s[:service_id]}"
               iter.next
             end
 
@@ -177,7 +176,6 @@ module RUPNP
     end
 
     def extract_devices
-      p @description[:root][:device_list]
       if @description[:root][:device_list]
         if @description[:root][:device_list][:device]
           dl = @description[:root][:device_list][:device]

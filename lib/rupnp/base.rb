@@ -6,6 +6,7 @@ module RUPNP
   class Base
     include EM::Deferrable
     include BuildUrl
+    include LogMixin
 
     HTTP_COMMON_CONFIG = {
       :head => {
@@ -19,7 +20,7 @@ module RUPNP
     end
 
     def get_description(location, getter)
-      puts "getting description for #{location}"
+      log :info, "getting description for #{location}"
       http = EM::HttpRequest.new(location).get(HTTP_COMMON_CONFIG)
 
       http.errback do |error|
@@ -28,13 +29,13 @@ module RUPNP
 
       callback = Proc.new do
         description = @parser.parse(http.response)
-        puts 'Description received'
+        log :debug, 'Description received'
         getter.succeed description
       end
 
       http.headers do |h|
         unless h['SERVER'] =~ /UPnP\/1\.\d/
-          puts "Not a supported UPnP response : #{h['SERVER']}"
+          log :error, "Not a supported UPnP response : #{h['SERVER']}"
           http.cancel_callback callback
         end
       end

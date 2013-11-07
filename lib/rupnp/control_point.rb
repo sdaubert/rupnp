@@ -1,6 +1,7 @@
 module RUPNP
 
   class ControlPoint
+    include LogMixin
 
     def initialize(search_target, search_options={})
       @search_target = search_target
@@ -17,9 +18,9 @@ module RUPNP
 
     def add_device(device)
       if has_already_device?(device)
-        puts "Device already in database: #{device}"
+       log :info, "Device already in database: #{device}"
       else
-        puts "adding device #{device.udn}"
+        log :info, "adding device #{device.udn}"
         @devices << device
         @new_device_channel << device
       end
@@ -29,7 +30,7 @@ module RUPNP
       device = Device.new(notification)
 
       device.errback do |device, message|
-        puts message
+        log :warn, message
       end
 
       device.callback do |device|
@@ -40,10 +41,11 @@ module RUPNP
     end
 
     def search_devices_and_listen(target, options)
+      log :info, 'search for devices'
       searcher = SSDP.search(target, options)
 
-      puts "read notifications"
       searcher.discovery_responses.subscribe do |notification|
+        log :debug, 'receive a notification'
         create_device notification
       end
     end
