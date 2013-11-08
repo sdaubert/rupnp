@@ -1,10 +1,10 @@
+require 'savon'
 require_relative 'base'
 
 module RUPNP
 
   class Service < Base
     attr_reader :type
-    attr_reader :id
     attr_reader :scpd_url
     attr_reader :control_url
     attr_reader :event_sub_url
@@ -23,6 +23,8 @@ module RUPNP
       @control_url =  build_url(url_base, service[:control_url].to_s)
       @event_sub_url =  build_url(url_base, service[:event_sub_url].to_s)
       @actions = []
+
+      initialize_savon
     end
 
     def fetch
@@ -49,6 +51,8 @@ module RUPNP
         end
 
         extract_service_state_table scpd
+        extract_actions scpd
+
         succeed self
       end
 
@@ -78,6 +82,49 @@ module RUPNP
         @state_table = scpd[:scpd][:service_state_table][:state_variable]
         # ease debug print
         @state_table.each { |s| s.each { |k, v| s[k] = v.to_s } }
+      end
+    end
+
+    def extract_actions(scpd)
+      if scpd[:scpd][:action_list] and scpd[:scpd][:action_list][:action]
+        log :info, "extract actions for service #@type"
+        @action_list = scpd[:scpd][:action_list][:action]
+        @action_list.each do |action|
+          action[:argument_list] = action[:argument_list][:argument]
+          define_method_from_action action
+        end
+        p @action_list
+        p self.singleton_methods
+      end
+    end
+
+    def define_method_from_action(action)
+      action_name = action[:name]
+      name = action_name.gsub(/(\w)([A-Z])/) { "#{$1}_#{$2}" }
+      name = name.downcase.to_sym
+      define_singleton_method(name) do |params|
+        @soap.call(action_name) do |locals|
+          local.message_tags 'xmlns:u' => @type
+          local.soap_action "#{type}##{action_name}"
+          if params
+            unless params.is_a? Hash
+              raise ArgumentError, 'only hash arguments are accepted'
+            end
+            soap.body params
+          end
+        end
+
+        ## TODO: process return value
+      end
+    end
+
+    def initialize_savon
+      @soap = Savon.client do |globals|
+        globals.endpoint @control_url
+        globals.namespace @type
+        globals.convert_request_keys_to :camel_case
+        globals.log true
+        globals.headers :HOST => "#{HOST_IP}"
       end
     end
 
