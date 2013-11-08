@@ -48,6 +48,7 @@ module RUPNP
           next
         end
 
+        extract_service_state_table scpd
         succeed self
       end
 
@@ -69,6 +70,14 @@ module RUPNP
         bd | scpd[:scpd][:service_state_table].empty?
       else
         true
+      end
+    end
+
+    def extract_service_state_table(scpd)
+      if scpd[:scpd][:service_state_table][:state_variable]
+        @state_table = scpd[:scpd][:service_state_table][:state_variable]
+        # ease debug print
+        @state_table.each { |s| s.each { |k, v| s[k] = v.to_s } }
       end
     end
 
