@@ -1,11 +1,11 @@
-require_relative 'build_url'
+require_relative 'tools'
 
 
 module RUPNP
 
   class Base
     include EM::Deferrable
-    include BuildUrl
+    include Tools
     include LogMixin
 
     HTTP_COMMON_CONFIG = {

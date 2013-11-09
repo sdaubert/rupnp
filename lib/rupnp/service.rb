@@ -100,8 +100,7 @@ module RUPNP
 
     def define_method_from_action(action)
       action_name = action[:name]
-      name = action_name.gsub(/(\w)([A-Z])/) { "#{$1}_#{$2}" }
-      name = name.downcase.to_sym
+      name = snake_case(action_name).to_sym
       define_singleton_method(name) do |params|
         @soap.call(action_name) do |locals|
           local.message_tags 'xmlns:u' => @type
