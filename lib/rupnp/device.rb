@@ -73,10 +73,14 @@ module RUPNP
         extract_device_info
         extract_icons
 
+        @services_extracted = @devices_extracted = false
         extract_services
         extract_devices
 
-        succeed self
+        tick_loop = EM.tick_loop do
+          :stop if @services_extracted and @devices_extracted
+        end
+        tick_loop.on_stop { succeed self }
       end
     end
 
@@ -152,26 +156,34 @@ module RUPNP
     end
 
     def extract_services
-      if @description[:root][:device][:service_list]
-        if @description[:root][:device][:service_list][:service]
-          sl = @description[:root][:device][:service_list][:service]
-          EM::Iterator.new(sl).each do |s, iter|
-            service = Service.new(@url_base, s)
+      if @description[:root][:device][:service_list] &&
+          @description[:root][:device][:service_list][:service]
+        sl = @description[:root][:device][:service_list][:service]
 
-            service.errback do |msg|
-              log :error, "failed to extract service #{s[:service_id]}: #{msg}"
-              iter.next
-            end
+        proc_each = Proc.new do |s, iter|
+          service = Service.new(@url_base, s)
 
-            service.callback do |serv|
-              @services << serv
-              ap serv
-              iter.next
-            end
-
-            service.fetch
+          service.errback do |msg|
+            log :error, "failed to extract service #{s[:service_id]}: #{msg}"
+            iter.next
           end
+
+          service.callback do |serv|
+            @services << serv
+            create_method_from_service serv
+            iter.next
+          end
+
+          service.fetch
         end
+
+        proc_after = Proc.new do
+          @services_extracted = true
+        end
+
+        EM::Iterator.new(sl).each(proc_each, proc_after)
+      else
+        @services_extracted = true
       end
     end
 
@@ -179,11 +191,19 @@ module RUPNP
       if @description[:root][:device_list]
         if @description[:root][:device_list][:device]
           dl = @description[:root][:device_list][:device]
-          #p dl
+          ## TODO
         end
+      end
+      @devices_extracted = true ## TEMP
+    end
+
+    def create_method_from_service(service)
+      if service.type =~ /urn:schemas-upnp-org:service:(\w+):\d/
+        name = snake_case($1).to_sym
+        define_singleton_method(name) { service }
       end
     end
 
-    end
+  end
 
 end
