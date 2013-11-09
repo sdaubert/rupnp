@@ -4,6 +4,18 @@ require_relative 'base'
 module RUPNP
 
   class Service < Base
+
+    # @private SOAP integer types
+    INTEGER_TYPES = %w(ui1 ui2 ui4 i1 i2 i4 int).freeze
+    # @private SOAP float types
+    FLOAT_TYPES = %w(r4 r8 number float).freeze
+    # @private SOAP string types
+    STRING_TYPES = %w(char string uuid).freeze
+    # @private SOAP true values
+    TRUE_TYPES = %w(1 true yes).freeze
+    # @private SOAP false values
+    FALSE_TYPES = %w(0 false no).freeze
+
     attr_reader :type
     attr_reader :scpd_url
     attr_reader :control_url
@@ -90,7 +102,8 @@ module RUPNP
         log :info, "extract actions for service #@type"
         @action_list = scpd[:scpd][:action_list][:action]
         @action_list.each do |action|
-          action[:argument_list] = action[:argument_list][:argument]
+          action[:arguments] = action[:argument_list][:argument]
+          action.delete :argument_list
           define_method_from_action action
         end
       end
@@ -103,7 +116,7 @@ module RUPNP
       name = snake_case(action_name).to_sym
       define_singleton_method(name) do |params|
         p action_name
-        @soap.call(action_name) do |locals|
+        response = @soap.call(action_name) do |locals|
           locals.attributes 'xmlns:u' => @type
           locals.soap_action "#{type}##{action_name}"
           if params
@@ -115,6 +128,52 @@ module RUPNP
         end
 
         ## TODO: process return value
+        if action[:arguments].is_a? Hash
+          log :debug, 'only one argument in argument list'
+          if action[:arguments][:direction] == 'out'
+            process_soap_response name, response, action[:arguments]
+          end
+        else
+          log :debug, 'true argument list'
+          action[:arguments].map do |arg|
+            if params arg[:direction] == 'out'
+              process_soap_response name, response, arg
+            end
+          end
+        end
+      end
+    end
+
+    def process_soap_response(action, resp, out_arg)
+      if resp.success? and resp.to_xml.empty?
+        log :debug, 'Successful SOAP request but empty response'
+        return {}
+      end
+
+      state_var = @state_table.find do |h|
+        h[:name] == out_arg[:related_state_variable]
+      end
+
+      action_response = "#{action}_response".to_sym
+      out_arg_name = snake_case(out_arg[:name]).to_sym
+      value = resp.hash[:envelope][:body][action_response][out_arg_name]
+
+      transform_method = if INTEGER_TYPES.include? state_var[:data_type]
+                           :to_i
+                         elsif FLOAT_TYPES.include? state_var[:data_type]
+                           :to_f
+                         elsif STRING_TYPES.include? state_var[:data_type]
+                           :to_s
+                         end
+      if transform_method
+        { out_arg_name => value.send(transform_method) }
+      elsif TRUE_TYPES.include? state_var[:data_type]
+        {  out_arg_name => true }
+      elsif FALSE_TYPES.include? state_var[:data_type]
+        {  out_arg_name => false }
+      else
+        log :warn, "SOAP response has an unknown type: #{state_var[:data_type]}"
+        {}
       end
     end
 
