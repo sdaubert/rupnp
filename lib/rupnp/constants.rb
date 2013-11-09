@@ -12,6 +12,6 @@ module RUPNP
     "UPnP/#{UPNP_VERSION} rupnp/#{VERSION}"
 
   HOST_IP = Socket.ip_address_list.
-    find_all { |ai| ai.ipv4? && !ai.ipv4_loopback? }.last
+    find_all { |ai| ai.ipv4? && !ai.ipv4_loopback? }.last.ip_address
 
 end
