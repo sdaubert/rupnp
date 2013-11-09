@@ -18,7 +18,7 @@ module RUPNP
       super()
       @description = service
 
-      @type = build_url(url_base, service[:service_type].to_s)
+      @type = service[:service_type].to_s
       @scpd_url = build_url(url_base,  service[:scpdurl].to_s)
       @control_url =  build_url(url_base, service[:control_url].to_s)
       @event_sub_url =  build_url(url_base, service[:event_sub_url].to_s)
@@ -93,23 +93,24 @@ module RUPNP
           action[:argument_list] = action[:argument_list][:argument]
           define_method_from_action action
         end
-        p @action_list
-        p self.singleton_methods
       end
     end
 
     def define_method_from_action(action)
+      action[:name] = action[:name].to_s
+      ap action
       action_name = action[:name]
       name = snake_case(action_name).to_sym
       define_singleton_method(name) do |params|
+        p action_name
         @soap.call(action_name) do |locals|
-          local.message_tags 'xmlns:u' => @type
-          local.soap_action "#{type}##{action_name}"
+          locals.attributes 'xmlns:u' => @type
+          locals.soap_action "#{type}##{action_name}"
           if params
             unless params.is_a? Hash
               raise ArgumentError, 'only hash arguments are accepted'
             end
-            soap.body params
+            locals.message params
           end
         end
 
@@ -124,6 +125,8 @@ module RUPNP
         globals.convert_request_keys_to :camel_case
         globals.log true
         globals.headers :HOST => "#{HOST_IP}"
+        globals.env_namespace 's'
+        globals.namespace_identifier 'u'
       end
     end
 
