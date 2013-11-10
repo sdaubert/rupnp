@@ -23,10 +23,10 @@ module RUPNP
 
     def add_device(device)
       if has_already_device?(device)
-       log :info, "Device already in database: #{device.usn}"
+       log :info, "Device already in database: #{device.udn}"
         existing_device = self.find_device_by_udn(device.udn)
         if existing_device.expiration < device.expiration
-          log :info, 'update expiration time for device #{device.usn}'
+          log :info, 'update expiration time for device #{device.udn}'
           @devices.delete existing_device
           @devices << device
         end
@@ -67,7 +67,7 @@ module RUPNP
           when 'ssdp:alive'
             create_device notification
           when 'ssdp:byebye'
-            log :info, "byebye notification sent by device #{notification[:usn]}"
+            log :info, "byebye notification sent by device #{notification[:udn]}"
             @devices.reject! { |d| d.usn == notification[:usn] }
           else
             log :warn, "Unknown notification type: #{notification[:nts]}"
@@ -84,6 +84,7 @@ module RUPNP
     def find_device_by_udn(udn)
       @devices.find { |d| d.udn == udn }
     end
+
 
     private
 

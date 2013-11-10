@@ -100,8 +100,8 @@ module RUPNP
     def extract_actions(scpd)
       if scpd[:scpd][:action_list] and scpd[:scpd][:action_list][:action]
         log :info, "extract actions for service #@type"
-        @action_list = scpd[:scpd][:action_list][:action]
-        @action_list.each do |action|
+        @actions = scpd[:scpd][:action_list][:action]
+        @actions.each do |action|
           action[:arguments] = action[:argument_list][:argument]
           action.delete :argument_list
           define_method_from_action action
@@ -111,11 +111,9 @@ module RUPNP
 
     def define_method_from_action(action)
       action[:name] = action[:name].to_s
-      ap action
       action_name = action[:name]
       name = snake_case(action_name).to_sym
       define_singleton_method(name) do |params|
-        p action_name
         response = @soap.call(action_name) do |locals|
           locals.attributes 'xmlns:u' => @type
           locals.soap_action "#{type}##{action_name}"
@@ -127,7 +125,6 @@ module RUPNP
           end
         end
 
-        ## TODO: process return value
         if action[:arguments].is_a? Hash
           log :debug, 'only one argument in argument list'
           if action[:arguments][:direction] == 'out'
