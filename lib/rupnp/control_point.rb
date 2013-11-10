@@ -23,7 +23,13 @@ module RUPNP
 
     def add_device(device)
       if has_already_device?(device)
-       log :info, "Device already in database: #{device}"
+       log :info, "Device already in database: #{device.usn}"
+        existing_device = self.find_device_by_udn(device.udn)
+        if existing_device.expiration < device.expiration
+          log :info, 'update expiration time for device #{device.usn}'
+          @devices.delete existing_device
+          @devices << device
+        end
       else
         log :info, "adding device #{device.udn}"
         @devices << device
@@ -55,6 +61,18 @@ module RUPNP
 
         log :info, 'now listening for device advertisement'
         listener = SSDP.listen
+
+        listener.notifications.subscribe do |notification|
+          case notification[:nts]
+          when 'ssdp:alive'
+            create_device notification
+          when 'ssdp:byebye'
+            log :info, "byebye notification sent by device #{notification[:usn]}"
+            @devices.reject! { |d| d.usn == notification[:usn] }
+          else
+            log :warn, "Unknown notification type: #{notification[:nts]}"
+          end
+        end
       end
 
       searcher.discovery_responses.subscribe do |notification|
@@ -63,6 +81,9 @@ module RUPNP
       end
     end
 
+    def find_device_by_udn(udn)
+      @devices.find { |d| d.udn == udn }
+    end
 
     private
 
