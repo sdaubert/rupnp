@@ -16,10 +16,11 @@ module RUPNP
     attr_reader :date
     attr_reader :cache_control
     attr_reader :bootid
+    attr_reader :expiration
 
     attr_reader :upnp_version
     attr_reader :xmlns
-    attr_reader :url_base # uPnP 1.0 only
+    attr_reader :url_base
     attr_reader :type
     attr_reader :friendly_name
     attr_reader :manufacturer
