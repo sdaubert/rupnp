@@ -2,7 +2,7 @@
 module RUPNP
 
   class SSDP::Searcher < SSDP::MulticastConnection
-    include SSDP::HTTPResponse
+    include SSDP::HTTP
 
     DEFAULT_M_SEARCH_TRY = 2
 
