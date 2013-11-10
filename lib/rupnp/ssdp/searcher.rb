@@ -4,14 +4,12 @@ module RUPNP
   class SSDP::Searcher < SSDP::MulticastConnection
     include SSDP::HTTPResponse
 
-    DEFAULT_RESPONSE_WAIT_TIME = 5
     DEFAULT_M_SEARCH_TRY = 2
 
     attr_reader :discovery_responses
 
 
     def initialize(options={})
-      options[:response_wait_time] ||= DEFAULT_RESPONSE_WAIT_TIME
       @m_search = SSDP::M_Search.new(options[:search_target],
                                      options[:response_wait_time]).to_s
       @m_search_count = options[:try_number] || DEFAULT_M_SEARCH_TRY
