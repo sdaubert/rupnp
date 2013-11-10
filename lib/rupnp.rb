@@ -1,4 +1,5 @@
 require 'awesome_print'
+require 'eventmachine-le'
 
 module RUPNP
 

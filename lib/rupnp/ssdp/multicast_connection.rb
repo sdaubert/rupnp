@@ -1,6 +1,5 @@
 require 'socket'
 require 'ipaddr'
-require 'eventmachine'
 
 module RUPNP
 
@@ -22,6 +21,7 @@ module RUPNP
     def setup_multicast_socket
       set_membership IPAddr.new(MULTICAST_IP).hton + IPAddr.new('0.0.0.0').hton
       set_ttl
+      set_reuse_addr
     end
 
     def set_membership(value)
@@ -33,6 +33,11 @@ module RUPNP
       set_sock_opt Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, value
       set_sock_opt Socket::IPPROTO_IP, Socket::IP_TTL, value
     end
+
+    def set_reuse_addr
+      set_sock_opt Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true
+    end
+
   end
 
 end
