@@ -1,13 +1,12 @@
-require 'em-http-request'
 require 'nori'
 require 'ostruct'
-require_relative 'service'
-require_relative 'base'
 
 
 module RUPNP
 
   class Device < Base
+    attr_reader :control_point
+
     attr_reader :st
     attr_reader :usn
     attr_reader :server
@@ -38,8 +37,9 @@ module RUPNP
     attr_reader :devices
 
 
-    def initialize(notification)
+    def initialize(control_point, notification)
       super()
+      @control_point = control_point
       @notification = notification
 
       @icons = []
@@ -162,7 +162,7 @@ module RUPNP
         sl = @description[:root][:device][:service_list][:service]
 
         proc_each = Proc.new do |s, iter|
-          service = Service.new(@url_base, s)
+          service = Service.new(self, @url_base, s)
 
           service.errback do |msg|
             log :error, "failed to extract service #{s[:service_id]}: #{msg}"
@@ -199,7 +199,7 @@ module RUPNP
     end
 
     def create_method_from_service(service)
-      if service.type =~ /urn:schemas-upnp-org:service:(\w+):\d/
+      if service.type =~ /urn:.*:service:(\w+):\d/
         name = snake_case($1).to_sym
         define_singleton_method(name) { service }
       end

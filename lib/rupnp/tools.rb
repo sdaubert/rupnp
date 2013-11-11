@@ -8,7 +8,7 @@ module RUPNP
     end
 
     def snake_case(str)
-      g = str.gsub(/([^A-Z])([A-Z])/,'\1_\2')
+      g = str.gsub(/([^A-Z_])([A-Z])/,'\1_\2')
       g.downcase || str.downcase
     end
 

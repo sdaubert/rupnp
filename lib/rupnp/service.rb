@@ -1,9 +1,17 @@
+require 'uri'
 require 'savon'
 require_relative 'base'
 
 module RUPNP
 
   class Service < Base
+
+    @@event_sub_count = 0
+
+    def self.event_sub_count
+      @@event_sub_count += 1
+    end
+
 
     # @private SOAP integer types
     INTEGER_TYPES = %w(ui1 ui2 ui4 i1 i2 i4 int).freeze
@@ -16,6 +24,8 @@ module RUPNP
     # @private SOAP false values
     FALSE_TYPES = %w(0 false no).freeze
 
+    attr_reader :device
+
     attr_reader :type
     attr_reader :scpd_url
     attr_reader :control_url
@@ -26,8 +36,9 @@ module RUPNP
     attr_reader :actions
     attr_reader :state_table
 
-    def initialize(url_base, service)
+    def initialize(device, url_base, service)
       super()
+      @device = device
       @description = service
 
       @type = service[:service_type].to_s
@@ -69,6 +80,47 @@ module RUPNP
       end
 
       get_description @scpd_url, scpd_getter
+    end
+
+    def subscribe_to_event(options={}, &blk)
+      cp = device.control_point
+
+      cp.start_event_server
+
+      port = cp.event_port
+      num = self.class.event_sub_count
+      @callback_url = "http://#{HOST_IP}:#{port}/event#{num}}"
+
+      uri = URI(@event_sub_url)
+      options[:timeout] ||= EVENT_SUB_DEFAULT_TIMEOUT
+      subscribe_req = <<EOR
+SUSCRIBE #{uri.path} HTTP/1.1\r
+HOST: #{HOST_IP}:#{port}\r
+USER-AGENT: #{RUPNP::USER_AGENT}\r
+CALLBACK: #@callback_url\r
+NT: upnp:event
+TIMEOUT: Second-#{options[:timeout]}\r
+\r
+EOR
+
+      server = uri.host
+      port = (uri.port || 80).to_i
+      ap @event_sub_url
+      ap server
+      ap port
+      con = EM.connect(server, port, EventSubscriber, subscribe_req)
+
+      con.response.subscribe do |resp|
+        if resp[:status_code] != 200
+          log :warn, "Cannot subscribe to event #@event_sub_url: #{resp[:status]}"
+        else
+          event = Event.new(resp[:sid], resp[:timeout].match(/(\d+)/)[1].to_i)
+          cp.add_event_url << ["/event#{num}", event]
+          event.subscribe(event, blk)
+        end
+        log :info, 'Close connection to subscribe event URL'
+        con.close_connection
+      end
     end
 
 
