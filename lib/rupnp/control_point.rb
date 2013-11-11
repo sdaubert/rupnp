@@ -5,6 +5,10 @@ module RUPNP
 
     DEFAULT_RESPONSE_WAIT_TIME = 5
 
+    attr_reader :event_port
+    attr_reader :add_event_url
+    attr_reader :event
+
 
     def initialize(search_target, search_options={})
       @search_target = search_target
@@ -19,6 +23,17 @@ module RUPNP
     def start
       search_devices_and_listen @search_target, @search_options
       yield @new_device_channel, @bye_device_channel
+    end
+
+    def start_event_server(port=EVENT_SUB_DEFAULT_PORT)
+      @event_port = port
+      @add_event_url = EM::Channel.new
+      @event_server ||= EM.start_server('0.0.0.0', port, EventServer,
+                                        @add_event_url)
+    end
+
+    def stop_event_server
+      EM.stop_server @event_server
     end
 
     def add_device(device)
@@ -38,7 +53,7 @@ module RUPNP
     end
 
     def create_device(notification)
-      device = Device.new(notification)
+      device = Device.new(self, notification)
 
       device.errback do |device, message|
         log :warn, message

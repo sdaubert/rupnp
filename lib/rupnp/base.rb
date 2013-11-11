@@ -1,3 +1,4 @@
+require 'em-http-request'
 require_relative 'tools'
 
 
