@@ -4,11 +4,14 @@ require_relative 'tools'
 
 module RUPNP
 
+  # Base class for devices and services
+  # @author Sylvain Daubert
   class Base
     include EM::Deferrable
     include Tools
     include LogMixin
 
+    # Common HTTP headers for description requests
     HTTP_COMMON_CONFIG = {
       :head => {
         :user_agent => USER_AGENT,
@@ -20,6 +23,12 @@ module RUPNP
       @parser = Nori.new(:convert_tags_to => ->(tag){ tag.snakecase.to_sym })
     end
 
+    # Get description from +location+
+    # @param [String] location
+    # @param [EM::Defferable] getter deferrable to advice about failure
+    #  or success. On fail, +getter+ receive a message. On success, it
+    #  receive a description (XML Nori hash)
+    # @return [void]
     def get_description(location, getter)
       log :info, "getting description for #{location}"
       http = EM::HttpRequest.new(location).get(HTTP_COMMON_CONFIG)
