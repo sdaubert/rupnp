@@ -96,8 +96,9 @@ module RUPNP
     end
 
 
-    # Find a device in control point's device list by its UDN
+    # Find a device from control point's device list by its UDN
     # @param [String] udn
+    # @return [Device,nil]
     def find_device_by_udn(udn)
       @devices.find { |d| d.udn == udn }
     end

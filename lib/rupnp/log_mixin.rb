@@ -16,7 +16,7 @@ module RUPNP
     LOG_LEVEL.default = 0
 
     # log a message
-    # @param [Symbol] level severity level.  May be +:debug+, 
+    # @param [Symbol] level severity level.  May be +:debug+,
     #    +:info+, +warn+, or +:error+
     # @param [String] msg message to log
     def log(level, msg='')
