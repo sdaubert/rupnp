@@ -4,36 +4,90 @@ require 'ostruct'
 
 module RUPNP
 
+  # A device is a UPnP service provider.
+  # @author Sylvain Daubert.
   class Device < Base
+    # Get control point which controls this device
+    # @return [ControlPoint]
     attr_reader :control_point
 
+    # Get search target.
+    # @return [String]
     attr_reader :st
+    # Get Unique Service Name
+    # @return [String]
     attr_reader :usn
+    # Get SERVER string
+    # @return [String]
     attr_reader :server
+    # URL to the UPnP description of the root device
+    # @return [String]
     attr_reader :location
+    # @return [String]
     attr_reader :ext
+    # Date when response was generated
+    # @return [String]
     attr_reader :date
+    # Contains +max-age+ directive used to specify advertisement validity
+    # @return [String]
     attr_reader :cache_control
-    attr_reader :bootid
+    # Expiration time for the advertisement
+    # @return [Time]
     attr_reader :expiration
 
+    # UPnP version used by the device
+    # @return [String]
     attr_reader :upnp_version
+    # XML namespace for device description
+    # @return [String]
     attr_reader :xmlns
+    # URL base for device access
+    # @return [String]
     attr_reader :url_base
+    # Device type
+    # @return [String]
     attr_reader :type
+    # Short description for end users
+    # @return [String]
     attr_reader :friendly_name
+    # Manufacturer's name
+    # @return [String]
     attr_reader :manufacturer
+    # Web site for manufacturer
+    # @return [String]
     attr_reader :manufacturer_url
+    # Long decription for end user
+    # @return [String]
     attr_reader :model_description
+    # Model name
+    # @return [String]
     attr_reader :model_name
+    # Model number
+    # @return [String]
     attr_reader :model_number
+    # Web site for model
+    # @return [String]
     attr_reader :model_url
+    # Serial number
+    # @return [String]
     attr_reader :serial_umber
+    # Unique Device Name
+    # @return [String]
     attr_reader :udn
+    # Universal Product Code
+    # @return [String]
     attr_reader :upc
+    # URL to presentation for device
+    # @return [String]
     attr_reader :presentation_url
+    # Array of icons to depict device in control point UI
+    # @return [Array<OpenStruct>]
     attr_reader :icons
+    # List of device's services
+    # @return [Array<Service>]
     attr_reader :services
+    # List of embedded devices
+    # @return [Array<Device>]
     attr_reader :devices
 
 
