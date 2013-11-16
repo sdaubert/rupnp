@@ -91,6 +91,8 @@ module RUPNP
     attr_reader :devices
 
 
+    # @param [ControlPoint] control_point
+    # @param [Hash] notification
     def initialize(control_point, notification)
       super()
       @control_point = control_point
@@ -101,6 +103,8 @@ module RUPNP
       @devices = []
     end
 
+    # Get device from its description
+    # @return [void]
     def fetch
       description_getter = EM::DefaultDeferrable.new
 
@@ -138,6 +142,10 @@ module RUPNP
         tick_loop.on_stop { succeed self }
       end
     end
+
+
+    private
+
 
     def extract_from_ssdp_notification(getter)
       @st = @notification['st']

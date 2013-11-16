@@ -2,12 +2,17 @@ require 'em-http-server'
 
 module RUPNP
 
+  # Event server to receive events from services.
+  # @author Sylvain Daubert
   class EventServer < EM::HttpServer::Server
     include LogMixin
 
+    # Channel to add url for listening to
+    # @return [EM::Channel]
     attr_reader :add_url
 
 
+    # @param [EM::Channel] add_url_channel channel for adding url
     def initialize(add_url_channel)
       super
 
@@ -20,6 +25,7 @@ module RUPNP
       end
     end
 
+    # Process a HTTP request received from a service/device
     def process_http_request
       log :debug, 'EventServer: receive request'
       url, event = @urls.find { |a| a[0] == @http_request_uri }
