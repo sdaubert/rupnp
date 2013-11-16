@@ -1,16 +1,23 @@
 module RUPNP
 
+  # Listener class for listening for devices' notifications
+  # @author Sylvain Daubert
   class SSDP::Listener < SSDP::MulticastConnection
     include HTTP
 
+    # Channel to receive notifications
+    # @return [EM::Channel]
     attr_reader :notifications
 
+    # @param [Hash] options
+    # @option options [Integer] :ttl
     def initialize(options={})
       @notifications = EM::Channel.new
 
       super options[:ttl]
     end
 
+    # @private
     def receive_data(data)
       port, ip = peer_info
       log :info, 'Receive notification from #{ip}:#{port}'

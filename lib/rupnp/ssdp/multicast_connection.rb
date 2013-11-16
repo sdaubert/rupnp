@@ -3,14 +3,19 @@ require 'ipaddr'
 
 module RUPNP
 
+  # Base class for multicast connections (mainly SSDP search and listen)
+  # @abstract
   class SSDP::MulticastConnection < EM::Connection
     include LogMixin
 
+    # @param [Integer] ttl
     def initialize(ttl=nil)
       @ttl = ttl || DEFAULT_TTL
       setup_multicast_socket
     end
 
+    # Get peer info
+    # @return [Array] [port, hostname]
     def peer_info
       Socket.unpack_sockaddr_in(get_peername)
     end

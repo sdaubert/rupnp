@@ -4,10 +4,15 @@ require_relative 'base'
 
 module RUPNP
 
+  # Service class for device's services
+  # @author Sylvain Daubert
   class Service < Base
 
     @@event_sub_count = 0
 
+    # Get event subscription count for all services
+    # (unique ID for subscription)
+    # @return [Integer]
     def self.event_sub_count
       @@event_sub_count += 1
     end
@@ -24,18 +29,39 @@ module RUPNP
     # @private SOAP false values
     FALSE_TYPES = %w(0 false no).freeze
 
+    # Get device to which this service belongs to
+    # @return [Device]
     attr_reader :device
 
+    # Get service type
+    # @return [String]
     attr_reader :type
+    # URL for service description
+    # @return [String]
     attr_reader :scpd_url
+    # URL for control
+    # @return [String]
     attr_reader :control_url
+    # URL for eventing
+    # @return [String]
     attr_reader :event_sub_url
 
+    # XML namespace for device description
+    # @return [String]
     attr_reader :xmlns
+    # Define architecture on which the service is implemented
+    # @return [String]
     attr_reader :spec_version
+    # Available actions on this service
+    # @return [Array<Hash>]
     attr_reader :actions
+    # State table for the service
+    # @return [Array<Hash>]
     attr_reader :state_table
 
+    # @param [Device] device
+    # @param [String] url_base
+    # @param [Hash] service
     def initialize(device, url_base, service)
       super()
       @device = device
@@ -50,6 +76,8 @@ module RUPNP
       initialize_savon
     end
 
+    # Get service from its description
+    # @return [void]
     def fetch
       if @scpd_url.empty?
         fail 'no SCPD URL'
@@ -82,6 +110,10 @@ module RUPNP
       get_description @scpd_url, scpd_getter
     end
 
+    # Subscribe to event
+    # @param [Hash] options
+    # @option options [Integer] timeout
+    # @yieldparam [Event] event event received
     def subscribe_to_event(options={}, &blk)
       cp = device.control_point
 
