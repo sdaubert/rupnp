@@ -44,12 +44,13 @@ end
 
 
 require_relative 'rupnp/constants'
+require_relative 'rupnp/tools'
 require_relative 'rupnp/log_mixin'
-require_relative 'rupnp/event_server'
-require_relative 'rupnp/event_subscriber'
 require_relative 'rupnp/event'
 require_relative 'rupnp/control_point'
-require_relative 'rupnp/base'
-require_relative 'rupnp/service'
-require_relative 'rupnp/device'
+require_relative 'rupnp/cp/base'
+require_relative 'rupnp/cp/remote_service'
+require_relative 'rupnp/cp/remote_device'
+require_relative 'rupnp/cp/event_server'
+require_relative 'rupnp/cp/event_subscriber'
 require_relative 'rupnp/ssdp'

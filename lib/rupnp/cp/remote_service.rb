@@ -6,7 +6,7 @@ module RUPNP
 
   # Service class for device's services
   # @author Sylvain Daubert
-  class Service < Base
+  class CP::RemoteService < CP::Base
 
     @@event_sub_count = 0
 
@@ -140,7 +140,7 @@ EOR
       ap @event_sub_url
       ap server
       ap port
-      con = EM.connect(server, port, EventSubscriber, subscribe_req)
+      con = EM.connect(server, port, CP::EventSubscriber, subscribe_req)
 
       con.response.subscribe do |resp|
         if resp[:status_code] != 200

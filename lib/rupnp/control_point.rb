@@ -65,7 +65,7 @@ module RUPNP
     def start_event_server(port=EVENT_SUB_DEFAULT_PORT)
       @event_port = port
       @add_event_url = EM::Channel.new
-      @event_server ||= EM.start_server('0.0.0.0', port, EventServer,
+      @event_server ||= EM.start_server('0.0.0.0', port, CP::EventServer,
                                         @add_event_url)
     end
 
@@ -137,7 +137,7 @@ module RUPNP
     end
 
     def create_device(notification)
-      device = Device.new(self, notification)
+      device = CP::RemoteDevice.new(self, notification)
 
       device.errback do |device, message|
         log :warn, message

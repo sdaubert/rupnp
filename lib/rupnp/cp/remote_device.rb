@@ -6,7 +6,7 @@ module RUPNP
 
   # A device is a UPnP service provider.
   # @author Sylvain Daubert.
-  class Device < Base
+  class CP::RemoteDevice < CP::Base
     # Get control point which controls this device
     # @return [ControlPoint]
     attr_reader :control_point
@@ -224,7 +224,7 @@ module RUPNP
         sl = @description[:root][:device][:service_list][:service]
 
         proc_each = Proc.new do |s, iter|
-          service = Service.new(self, @url_base, s)
+          service = CP::RemoteService.new(self, @url_base, s)
 
           service.errback do |msg|
             log :error, "failed to extract service #{s[:service_id]}: #{msg}"

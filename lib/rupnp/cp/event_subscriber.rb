@@ -2,7 +2,7 @@ module RUPNP
 
   # Event subscriber to an event's service
   # @author Sylvain Daubert
-  class EventSubscriber < EM::Connection
+  class CP::EventSubscriber < EM::Connection
     include LogMixin
 
     # Response from device

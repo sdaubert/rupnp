@@ -4,7 +4,7 @@ module RUPNP
 
   # Event server to receive events from services.
   # @author Sylvain Daubert
-  class EventServer < EM::HttpServer::Server
+  class CP::EventServer < EM::HttpServer::Server
     include LogMixin
 
     # Channel to add url for listening to
