@@ -40,6 +40,10 @@ module RUPNP
     @log_level
   end
 
+
+  # Base class for RUPNP errors.
+  class Error < StandardError; end
+
 end
 
 
