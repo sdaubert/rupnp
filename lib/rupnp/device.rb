@@ -61,6 +61,7 @@ module RUPNP
     # @param [Hash] config config options
     def initialize(config={})
       @config_id = 1
+      @icons = []
       @services = []
 
       unless CONFIG[:required].all? { |key| config.has_key? key }
@@ -134,6 +135,51 @@ module RUPNP
     end
 
     def generate_xml_device_description
+      if @xml_description
+        @xml_descritpion
+      else
+        @xml_description = <<EOX
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0" configId="#@config_id">
+<specVersion>
+<major>1</major>
+<minor>1</minor>
+</specVersion>
+<device>
+<deviceType>urn:schemas-upnp-org:device:#@device_type:#@type_version</deviceType>
+<friendlyName>#@friendly_name</friendlyName>
+<manufacturer>#@manufacturer</manufacturer>
+<manufacturerURL>URL to manufacturer site</manufacturerURL>
+<modelName>model name</modelName>
+<UDN>uuid:UUID</UDN>
+EOX
+        if @model_description
+          @xml_description << "<modelDescription>#@model_description</modelDescription>\n"
+        end
+        if @model_number
+          @xml_description << "<modelNumber>#@model_number</modelNumber>\n"
+        end
+        if @model_url
+          @xml_description << "<modelURL>#@model_url</modelURL>\n"
+        end
+        if @model_site
+          @xml_description << "<modelURL>#@model_site</modelURL>\n"
+        end
+        if @serial_number
+          @xml_description << "<serialNumber>#@serial_number</serialNumber>\n"
+        end
+        if @upc
+          @xml_description << "<UPC>#@upc</UPC>\n"
+        end
+        if @icons
+        end
+        if @services
+        end
+        if @presentation_url
+          @xml_description << "<presentationURL>#@upc</presentationURL>\n"
+        end
+        @xml_description << "</device>\n</root>\n"
+      end
     end
 
     def start_ssdp_server
