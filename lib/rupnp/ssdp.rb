@@ -33,6 +33,11 @@ module RUPNP
                               SSDP::Listener, options)
     end
 
+    # Notify announces
+    def self.notify(type, stype, options={})
+      EM.open_datagram_socket(MULTICAST_IP, DISCOVERY_PORT,
+                              SSDP::Notifier, type, subtype, options)
+    end
   end
 
 end
