@@ -118,6 +118,7 @@ module RUPNP
     # * at least one serice description changed.
     def update_config
       @config_id = (@config_id + 1) % 2**24
+      stop_ssdp_server
       notify :alive
     end
 
@@ -183,9 +184,18 @@ EOX
     end
 
     def start_ssdp_server
+      options = { max_age: @notify_interval, ip: @ip, boot_id: @boot_id,
+        config_id: @config_id, u_search_port: @u_search_port }
+
+      @mssdp = EM.open_datagram_socket(MULTICAST_IP, DISCOVERY_PORT,
+                                       SSDP::MSearchResponder, self, options)
+      @ussdp = EM.open_datagram_socket(@ip, @u_search_port,
+                                       SSDP::USearchResponder, self, options)
     end
 
     def stop_ssdp_server
+      @mssdp.close_connection
+      @ussdp.close_connection
     end
 
     def start_http_server
