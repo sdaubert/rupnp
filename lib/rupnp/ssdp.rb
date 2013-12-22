@@ -4,6 +4,11 @@ require_relative 'ssdp/m_search'
 require_relative 'ssdp/multicast_connection'
 require_relative 'ssdp/searcher'
 require_relative 'ssdp/listener'
+require_relative 'ssdp/notifier'
+require_relative 'ssdp/search_responder.rb'
+require_relative 'ssdp/msearch_responder.rb'
+require_relative 'ssdp/usearch_responder.rb'
+
 
 module RUPNP
 
