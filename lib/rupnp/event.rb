@@ -1,7 +1,7 @@
 module RUPNP
 
   # Event class to handle events from devices
-  # @todo Renewal an cancellation of subscription are not coded
+  # @todo Renewal and cancellation of subscription are not coded
   # @author Sylvain Daubert
   class Event < EM::Channel
 

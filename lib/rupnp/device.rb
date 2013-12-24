@@ -14,16 +14,17 @@ module RUPNP
   class Device
 
     # UUID for this device
+    # @return [String]
     attr_reader :uuid
     # Configuration number for this device
+    # @return [Fixnum]
     attr_reader :config_id
     # List of services
+    # @return [Array]
     attr_reader :services
 
 
     # Configuration options for {#initialize}.
-    #
-    # +CONFIG[:required]+ items are mandatory.
     #
     # Each item has an attribute accessor.
     # * Mandatory items:
@@ -58,7 +59,7 @@ module RUPNP
     }
 
 
-    # @param [Hash] config config options
+    # @param [Hash] config configuration options
     def initialize(config={})
       @config_id = 1
       @icons = []
@@ -84,6 +85,9 @@ module RUPNP
     end
 
 
+    # Start device.
+    # Send notifications on network and wait for requests.
+    # @return [void]
     def start
       # Generate Device Description XML file
       generate_xml_device_description
@@ -104,6 +108,8 @@ module RUPNP
       @notify_timer = EM.add_periodic_timer(@notify_interval) { notify :alive }
     end
 
+    # Send byebye notifications then stop device.
+    # @return [void]
     def stop
       notify :byebye
       stop_ssdp_server
@@ -115,13 +121,16 @@ module RUPNP
     # When device configuration is updated, control points must be notified.
     # Execute this method when :
     # * root device description changed ;
-    # * at least one serice description changed.
+    # * at least one service description changed.
+    # @return [void]
     def update_config
       @config_id = (@config_id + 1) % 2**24
       stop_ssdp_server
       notify :alive
     end
 
+    # Get device URN
+    # @return [String]
     def urn
       "schemas-upnp-org:device:#@device_type:#@type_version"
     end
