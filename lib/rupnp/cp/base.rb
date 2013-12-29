@@ -56,6 +56,11 @@ module RUPNP
         http.callback &callback
       end
 
+      # @return String
+      def inspect
+        "#<#{self.class}:#{object_id} type=#{type.inspect}>"
+      end
+
     end
 
   end

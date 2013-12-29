@@ -13,6 +13,7 @@ EM.run do
   cp.start do |new_devices, disappeared_devices|
     new_devices.subscribe do |device|
       # Do what you want here with new devices
+      # Services are available through device.services
     end
     disappeared_devices.subscribe do |device|
       # Do what you want here with devices which unsubscribe

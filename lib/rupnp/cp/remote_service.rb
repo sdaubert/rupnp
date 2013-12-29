@@ -4,7 +4,35 @@ require_relative 'base'
 
 module RUPNP
 
-  # Service class for device's services
+  # Service class for device's services.
+  #
+  # ==Actions
+  # This class defines ruby methods from actions defined in
+  # service description, as provided by the device.
+  #
+  # By example, from this description:
+  #  <action>
+  #    <name>actionName</name>
+  #    <argumentList>
+  #    <argument>
+  #      <name>argumentNameIn</name>
+  #      <direction>in</direction>
+  #      <relatedStateVariable>stateVariableName</relatedStateVariable>
+  #    </argument>
+  #    <argument>
+  #      <name>argumentNameOut</name>
+  #      <direction>out</direction>
+  #      <relatedStateVariable>stateVariableName</relatedStateVariable>
+  #    </argument>
+  #  </action>
+  # a #action_name method is created. This method requires a hash with
+  # an element named argument_name_in.
+  #
+  # If no <i>in/<i> argument is required, an empty hash (+{}+) must be
+  # passed to the method.
+  #
+  # A Hash is returned, with a key for each <i>out</i> argument.
+  #
   # @author Sylvain Daubert
   class CP::RemoteService < CP::Base
 
@@ -260,6 +288,7 @@ EOR
 
     def initialize_savon
       @soap = Savon.client do |globals|
+        globals.log_level :error
         globals.endpoint @control_url
         globals.namespace @type
         globals.convert_request_keys_to :camel_case
