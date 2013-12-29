@@ -34,4 +34,11 @@ discover> devices[0].class
 discover>
 ```
 
-`discover` used `pry`. So, in `discover`, you can use the powerof Pry.
+The `search` command take an argument : the target for a UPnP M-SEARCH. This
+argument may be:
+* `ssdp:all`;
+* `upnp:rootdevice`;
+* a URN as `upnp:{URN}`.
+If no argument is given, default to `ssdp:all`.
+
+`discover` use `pry`. So, in `discover`, you can use the power of Pry.
