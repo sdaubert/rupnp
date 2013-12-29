@@ -27,6 +27,9 @@ module RUPNP
     # event)
     # @return [EM::Channel]
     attr_reader :add_event_url
+    # Return remote devices controlled by this control point
+    # @return [Array<CP::RemoteDevice>]
+    attr_reader :devices
 
 
     # @param [Symbol,String] search_target target to search for.
@@ -57,6 +60,12 @@ module RUPNP
     def start
       search_devices_and_listen @search_target, @search_options
       yield @new_device_channel, @bye_device_channel
+    end
+
+    def search_only
+      options = @search_options.dup
+      options[:search_only] = true
+      search_devices_and_listen @search_target, options
     end
 
     # Start event server for listening for device events
@@ -114,18 +123,20 @@ module RUPNP
         log :info, 'search timeout'
         searcher.close_connection
 
-        log :info, 'now listening for device advertisement'
-        listener = SSDP.listen
+        unless options[:search_only]
+          log :info, 'now listening for device advertisement'
+          listener = SSDP.listen
 
-        listener.notifications.subscribe do |notification|
-          case notification[:nts]
-          when 'ssdp:alive'
-            create_device notification
-          when 'ssdp:byebye'
-            log :info, "byebye notification sent by device #{notification[:udn]}"
-            @devices.reject! { |d| d.usn == notification[:usn] }
-          else
-            log :warn, "Unknown notification type: #{notification[:nts]}"
+          listener.notifications.subscribe do |notification|
+            case notification[:nts]
+            when 'ssdp:alive'
+              create_device notification
+            when 'ssdp:byebye'
+              log :info, "byebye notification sent by device #{notification[:udn]}"
+              @devices.reject! { |d| d.usn == notification[:usn] }
+            else
+              log :warn, "Unknown notification type: #{notification[:nts]}"
+            end
           end
         end
       end

@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require 'rupnp/discover'
+
+RUPNP::Discover.run
