@@ -25,17 +25,17 @@ module RUPNP
   #      <relatedStateVariable>stateVariableName</relatedStateVariable>
   #    </argument>
   #  </action>
-  # a #action_name method is created. This method requires a hash with
-  # an element named argument_name_in.
-  #
-  # If no <i>in/<i> argument is required, an empty hash (+{}+) must be
-  # passed to the method.
+  # a +#action_name+ method is created. This method requires a hash with
+  # an element named +argument_name_in+.
+  # If no <i>in</i> argument is required, an empty hash (<code>{}</code>)
+  # must be passed to the method.
   #
   # A Hash is returned, with a key for each <i>out</i> argument.
   #
   # @author Sylvain Daubert
   class CP::RemoteService < CP::Base
 
+    # @private
     @@event_sub_count = 0
 
     # Get event subscription count for all services

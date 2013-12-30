@@ -37,7 +37,7 @@ module RUPNP
         http = EM::HttpRequest.new(location).get(HTTP_COMMON_CONFIG)
 
         http.errback do |error|
-          getter.set_deffered_status :failed, 'Cannot get description'
+          getter.set_deferred_status :failed, 'Cannot get description'
         end
 
         callback = Proc.new do

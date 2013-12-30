@@ -54,6 +54,13 @@ module RUPNP
       false
     end
 
+    # Retrieve UDN from USN
+    # @param [String] usn
+    # @return [String]
+    def usn2udn(usn)
+      rex = '([A-Fa-f0-9]{8,8}(-[A-Fa-f0-9]{4,4}){3,3}-[A-Fa-f0-9]{12,12})'
+      usn.match(/#{rex}/)[1]
+    end
   end
 
 end

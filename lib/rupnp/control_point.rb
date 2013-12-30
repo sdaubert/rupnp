@@ -15,6 +15,7 @@ module RUPNP
   # @author Sylvain Daubert
   class ControlPoint
     include LogMixin
+    include Tools
 
     # Default response wait time for searching devices. This is set
     # to the maximum value from UPnP 1.1 specification.
@@ -128,14 +129,16 @@ module RUPNP
           listener = SSDP.listen
 
           listener.notifications.subscribe do |notification|
-            case notification[:nts]
+            case notification['nts']
             when 'ssdp:alive'
               create_device notification
             when 'ssdp:byebye'
-              log :info, "byebye notification sent by device #{notification[:udn]}"
-              @devices.reject! { |d| d.usn == notification[:usn] }
+              udn = usn2udn(notification['usn'])
+              log :info, "byebye notification sent by device #{udn}"
+              rejected = @devices.reject! { |d| d.udn == udn }
+              log :info, "#{rejected.udn} device removed" if rejected
             else
-              log :warn, "Unknown notification type: #{notification[:nts]}"
+              log :warn, "Unknown notification type: #{notification['nts']}"
             end
           end
         end
