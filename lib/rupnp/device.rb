@@ -5,6 +5,7 @@ module RUPNP
   # Error when initializing device. Raised when a required configuration item
   # is missing.
   class DeviceInitializationError < Error
+    def message() 'Not all required configuration items are set'; end
   end
 
 
@@ -73,7 +74,6 @@ module RUPNP
       end
 
       CONFIG[:required].each do |key|
-        p key
         instance_variable_set "@#{key}".to_sym, config[key]
         define_attr_accessor_on key
       end
