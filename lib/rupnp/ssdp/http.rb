@@ -31,7 +31,7 @@ module RUPNP
     #   +:cmd+ (all line)
     def get_http_verb(sock)
       str = sock.readline
-      if str =~ /(\w+)\s+(.*)\s+HTTP\s+(\d\.\d)/
+      if str =~ /(\w+)\s+(.*)\s+HTTP\/(\d\.\d)/
         {:verb => $1, :path => $2, :http_version => $3, :cmd => str}
       else
         nil

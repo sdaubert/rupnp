@@ -3,14 +3,19 @@ module RUPNP
   # M-SEARCH responder for M-SEARCH multicast requests from control points.
   # @author Sylvain Daubert
   module SSDP::SearchResponder
+    include SSDP::HTTP
 
     def receive_data(data)
       port, ip = peer_info
-      log :info, "#{self.class}: Receive M-SEARCH request from #{ip}:#{port}"
+      log :debug,  "#{self.class}: Receive data from #{ip}:#{port}"
       log :debug, data
 
       io = StringIO.new(data)
       h = get_http_verb(io)
+
+      if h[:verb].upcase == 'NOTIFY'
+        return
+      end
 
       if h.nil? or !(h[:verb].upcase == 'M-SEARCH' and h[:path] == '*' and
                        h[:http_version] == '1.1')
@@ -22,6 +27,8 @@ module RUPNP
         log :warn, "#{self.class}: Unknown MAN field: #{h|:man}"
         return
       end
+
+      log :info, "#{self.class}: Receive M-SEARCH request from #{ip}:#{port}"
 
       callback = nil
       case h[:st]

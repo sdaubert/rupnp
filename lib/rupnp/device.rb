@@ -1,3 +1,5 @@
+require 'uuid'
+
 module RUPNP
 
   # Error when initializing device. Raised when a required configuration item
@@ -34,6 +36,7 @@ module RUPNP
     #   * +:manufacturer+: manufacturer name;
     #   * +:model_name+: model name;
     #   * +:ip+: device's IP address;
+    #   * +:port+: device's port to listen to for requests;
     #   * +:notify_interval+: time interval between 2 notifications;
     # * Optional items:
     #   * +:manufacturel_url+: URL to manufacturer's web site;
@@ -52,7 +55,7 @@ module RUPNP
     #   * +:u_search_port+: port for listening to unicast M-SEARCH requests.
     CONFIG = {
       :required => [:device_type, :type_version, :friendly_name, :manufacturer,
-                    :model_name, :ip, :notify_interval],
+                    :model_name, :ip, :port, :notify_interval],
       :optional => [:manufacturer_url, :model_description, :model_number,
                     :model_url, :serial_number, :upc, :presentation_url, :uuid,
                     :renew_advertisement, :boot_id, :u_search_port],
@@ -70,17 +73,18 @@ module RUPNP
       end
 
       CONFIG[:required].each do |key|
-        instance_variable_set "@#{key}".to_sym, CONFIG[:required][key]
+        p key
+        instance_variable_set "@#{key}".to_sym, config[key]
         define_attr_accessor_on key
       end
       CONFIG[:optional].each do |key|
-        instance_variable_set "@#{key}".to_sym, CONFIG[:optional][key]
+        instance_variable_set "@#{key}".to_sym, config[key]
         define_attr_accessor_on key unless key == :uuid
       end
 
       @uuid ||= UUID.generate
       @renew_advertisement ||= 1800
-      @bootid ||= 1
+      @boot_id ||= 1
       @u_search_port ||= DISCOVERY_PORT
     end
 
@@ -186,15 +190,18 @@ EOX
         if @services
         end
         if @presentation_url
-          @xml_description << "<presentationURL>#@upc</presentationURL>\n"
+          @xml_description << "<presentationURL>#@presentation_url</presentationURL>\n"
         end
         @xml_description << "</device>\n</root>\n"
       end
     end
 
     def start_ssdp_server
-      options = { max_age: @notify_interval, ip: @ip, boot_id: @boot_id,
-        config_id: @config_id, u_search_port: @u_search_port }
+      options = {
+        max_age: @notify_interval, ip: @ip, port: @port,
+        boot_id: @boot_id, config_id: @config_id,
+        u_search_port: @u_search_port
+      }
 
       @mssdp = EM.open_datagram_socket(MULTICAST_IP, DISCOVERY_PORT,
                                        SSDP::MSearchResponder, self, options)
@@ -217,6 +224,7 @@ EOX
       options = {
         max_age: @notify_interval,
         ip: @ip,
+        port: @port,
         uuid: @uuid,
         boot_id: @boot_id,
         config_id: @config_id,

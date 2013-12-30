@@ -42,7 +42,7 @@ module RUPNP
     # @param [Hash] options see {SSDP::Notifier#initialize}
     def self.notify(type, stype, options={})
       EM.open_datagram_socket(MULTICAST_IP, DISCOVERY_PORT,
-                              SSDP::Notifier, type, subtype, options)
+                              SSDP::Notifier, type, stype, options)
     end
   end
 

@@ -16,10 +16,10 @@ module RUPNP
     def initialize(type, subtype, options={})
       @type = (type == :root) ? 'upnp:rootdevice' : type
       @subtype = subtype
-      @notify_count = options.delete[:try_number] || DEFAULT_NOTIFY_TRY
+      @notify_count = options.delete(:try_number) || DEFAULT_NOTIFY_TRY
       @options = options
 
-      super options.delete[:ttl]
+      super options.delete(:ttl)
     end
 
     # @private
@@ -45,13 +45,13 @@ module RUPNP
             else
               "uuid:#{@options[:uuid]}::#@type"
             end
-      case subtype
+      case @subtype
       when :alive
       <<EOD
 NOTIFY * HTTP/1.1\r
 HOST: #{MULTICAST_IP}:#{DISCOVERY_PORT}\r
 CACHE-CONTROL: max-age = #{@options[:max_age]}\r
-LOCATION: http://#{options[:ip]}/root_description.xml\r
+LOCATION: http://#{@options[:ip]}:#{@options[:port]}/root_description.xml\r
 NT: #@type\r
 NTS: ssdp:#@subtype\r
 SERVER: #{USER_AGENT}\r
@@ -76,7 +76,7 @@ EOD
       <<EOD
 NOTIFY * HTTP/1.1\r
 HOST: #{MULTICAST_IP}:#{DISCOVERY_PORT}\r
-LOCATION: http://#{options[:ip]}/root_description.xml\r
+LOCATION: http://#{@options[:ip]}:#{@options[:port]}/root_description.xml\r
 NT: #@type\r
 NTS: ssdp:#@subtype\r
 USN: #{usn}\r
