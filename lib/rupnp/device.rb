@@ -115,6 +115,7 @@ module RUPNP
     # Send byebye notifications then stop device.
     # @return [void]
     def stop
+      EM.cancel_timer @notify_timer
       notify :byebye
       stop_ssdp_server
 

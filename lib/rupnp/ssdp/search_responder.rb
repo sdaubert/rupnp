@@ -23,26 +23,27 @@ module RUPNP
         return
       end
 
-      if h[:man] != '"ssdp:discover"'
-        log :warn, "#{self.class}: Unknown MAN field: #{h|:man}"
+      h = get_http_headers(io)
+      if h['man'] != '"ssdp:discover"'
+        log :warn, "#{self.class}: Unknown MAN field: #{h['man']}"
         return
       end
 
       log :info, "#{self.class}: Receive M-SEARCH request from #{ip}:#{port}"
 
       callback = nil
-      case h[:st]
+      case h['st']
       when 'ssdp:all'
         callback = Proc.new do
           send_response 'upnp:rootdevice'
           send_response "uuid:#{@device.uuid}"
           send_response "urn:#{@device.urn}"
-          @devices.services.each do |s|
+          @device.services.each do |s|
             send_response "urn:#{s.urn}"
           end
         end
       when 'upnp:rootdevice'
-        send_response 'upnp:rootdevice'
+        callback = Proc.new { send_response 'upnp:rootdevice' }
       when /^uuid:([0-9a-fA-F-]+)/
          if $1 and $1 == @device.uuid
            callback = Proc.new { send_response "uuid:#{@device.uuid}" }
@@ -50,22 +51,22 @@ module RUPNP
       when /^urn:schemas-upnp-org:(\w+):(\w+):(\w+)/
         case $1
         when 'device'
-          if urn_are_equivalent?(h[:st], @device.urn)
+          if urn_are_equivalent?(h['st'], @device.urn)
             callback = Proc.new { send_response "urn:#{@device.urn}" }
           end
         when 'service'
-          if @device.services.one? { |s| urn_are_equivalent? h[:st], s.urn }
-            callback = Proc.new { send_response h[:st] }
+          if @device.services.one? { |s| urn_are_equivalent? h['st'], s.urn }
+            callback = Proc.new { send_response h['st'] }
           end
         end
       end
 
       if callback
         if self.is_a? SSDP::MulticastConnection
-          if h[:mx]
-            mx = h[:mx].to_i
+          if h['mx']
+            mx = h['mx'].to_i
             # MX MUST not be greater than 5
-            mx = 5 if wait_time > 5
+            mx = 5 if mx > 5
             # Wait for a random time less than MX
             wait_time = rand(mx)
             EM.add_timer wait_time, &callback
@@ -77,17 +78,26 @@ module RUPNP
           # Unicast request. Don't bother for MX field.
           callback.call
         end
+      else
+        log :debug, 'No response sent'
       end
     end
 
 
     def send_response(st)
-      response <<EOR
+      usn = "uuid:#{@device.uuid}"
+      usn += case st
+             when 'upnp:rootdevice', /^urn/
+               "::#{st}"
+             else
+               ''
+             end
+      response =<<EOR
 HTTP/1.1 200 OK\r
 CACHE-CONTROL: max-age = #{@options[:max_age]}\r
 DATE: #{Time.now.httpdate}\r
 EXT:\r
-LOCATION:  http://#{options[:ip]}/root_description.xml\r
+LOCATION:  http://#{@options[:ip]}/root_description.xml\r
 SERVER: #{USER_AGENT}\r
 ST: #{st}
 USN: #{usn}\r

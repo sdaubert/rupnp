@@ -155,7 +155,6 @@ module RUPNP
       @ext = @notification['ext']
       @date = @notification['date'] || ''
       @cache_control = @notification['cache-control'] || ''
-      @server = @notification['server']
 
       max_age = @cache_control.match(/max-age\s*=\s*(\d+)/)[1].to_i
       @expiration = if @date.empty?

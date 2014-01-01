@@ -27,7 +27,7 @@ module RUPNP
       notify = notify_request
       @notify_count.times do
         send_datagram notify, MULTICAST_IP, DISCOVERY_PORT
-        log :debug, "send datagram:\n#{notify}"
+        log :debug, "#{self.class}: send datagram:\n#{notify}"
       end
       close_connection_after_writing
     end

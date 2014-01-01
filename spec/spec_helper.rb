@@ -1,5 +1,6 @@
 $:.unshift '../lib'
 require 'rupnp'
+require 'em-spec/rspec'
 
 
 class FakeCP < EM::Connection
@@ -33,3 +34,5 @@ class FakeCP < EM::Connection
 
 end
 
+class FakeMSearch < FakeCP
+end
