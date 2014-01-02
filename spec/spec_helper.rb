@@ -3,29 +3,19 @@ require 'rupnp'
 require 'em-spec/rspec'
 
 
-class FakeCP < EM::Connection
+class FakeMulticast < RUPNP::SSDP::MulticastConnection
   attr_reader :handshake_response, :packets
 
-  def onopen(&blk); @onopen = blk; end
   def onclose(&blk); @onclose = blk; end
-  def onerror(&blk); @onerror = blk; end
   def onmessage(&blk); @onmessage = blk; end
 
   def initialize
-    @state = :new
     @packets = []
   end
 
   def receive_data(data)
-    # puts "RECEIVE DATA #{data}"
-    if @state == :new
-      @handshake_response = data
-      @onopen.call if defined? @onopen
-      @state = :open
-    else
       @onmessage.call(data) if defined? @onmessage
       @packets << data
-    end
   end
 
   def unbind
@@ -34,5 +24,34 @@ class FakeCP < EM::Connection
 
 end
 
-class FakeMSearch < FakeCP
+
+NOTIFY_REGEX = {
+  :alive => [/^NOTIFY \* HTTP\/1.1\r\n/,
+             /HOST: 239\.255\.255\.250:1900\r\n/,
+             /CACHE-CONTROL:\s+max-age\s+=\s+\d+\r\n/,
+             /LOCATION: http:\/\/(.*)\r\n/,
+             /NT: [0-9A-Za-z:-]+\r\n/,
+             /NTS: ssdp:(alive|byebye)\r\n/,
+             /SERVER: (.*)\r\n/,
+             /USN: uuid:(.*)\r\n/,
+             /BOOTID.UPNP.ORG: \d+\r\n/,
+             /CONFIGID.UPNP.ORG: \d+\r\n/,
+             /(SEARCHPORT.UPNP.ORG: \d+\r\n)/
+            ].freeze,
+  :byebye => [/^NOTIFY \* HTTP\/1.1\r\n/,
+             /HOST: 239\.255\.255\.250:1900\r\n/,
+             /NT: [0-9A-Za-z:-]+\r\n/,
+             /NTS: ssdp:(alive|byebye)\r\n/,
+             /SERVER: (.*)\r\n/,
+             /USN: uuid:(.*)\r\n/,
+             /BOOTID.UPNP.ORG: \d+\r\n/,
+             /CONFIGID.UPNP.ORG: \d+\r\n/,
+            ].freeze,
+}
+
+RSpec::Matchers.define :be_a_notify_packet do |type|
+  match do |packet|
+    success = NOTIFY_REGEX[type].all? { |r| packet.match(r) }
+    success || packet[-4..-1] == "\r\n\r\n"
+  end
 end

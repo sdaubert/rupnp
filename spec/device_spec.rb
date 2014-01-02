@@ -108,7 +108,7 @@ module RUPNP
               done
             end
           end
-        end
+         end
       end
 
       it "should stop HTTP server"
