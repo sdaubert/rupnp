@@ -80,6 +80,7 @@ module RUPNP
 
           EM.add_timer(2) do
             expect(count).to eq(3 * RUPNP::SSDP::Notifier::DEFAULT_NOTIFY_TRY)
+            device.stop
             done
           end
         end
@@ -87,7 +88,29 @@ module RUPNP
     end
 
     context "#stop" do
-      it "should stop SSDP server"
+      it "should stop SSDP server" do
+        em do
+          device.start
+
+          EM.add_timer(1) do
+            device.stop
+          end
+
+          EM.add_timer(2) do
+            count = 0
+            searcher = SSDP.search
+            searcher.discovery_responses.subscribe do |resp|
+              count += 1 if resp['server'] =~ /rupnp/
+            end
+            EM.add_timer(1) do
+              searcher.close_connection
+              expect(count).to eq(0)
+              done
+            end
+          end
+        end
+      end
+
       it "should stop HTTP server"
 
       it "should notify 'byebye' message" do
