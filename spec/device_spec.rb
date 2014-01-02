@@ -8,8 +8,16 @@ module RUPNP
     include EM::SpecHelper
 
     let(:config) do
-      Hash[Device::CONFIG[:required].map { |item| [item, 'value'] }]
+       {:device_type => 'Basic',
+        :type_version => 1,
+        :ip => '127.0.0.1',
+        :port => 3001,
+        :notify_interval => 18000,
+        :friendly_name => 'Test',
+        :manufacturer => 'RUPNP',
+        :model_name => ''}
     end
+    let(:device) { Device.new(config) }
 
     context "#initialize" do
 
@@ -38,14 +46,6 @@ module RUPNP
     end
 
     context "#start" do
-      before(:each) do
-        cfg = config.merge!({ :device_type => 'Basic',
-                             :type_version => 1,
-                             :ip => '127.0.0.1',
-                             :port => 3001,
-                             :notify_interval => 18000})
-        @device = Device.new(config.merge(:ip => '127.0.0.1', :port => 3001))
-      end
 
       it "should start SSDP server" do
         em do
@@ -62,18 +62,54 @@ module RUPNP
             fail
             done
           end
-          @device.start
+          device.start
         end
       end
 
       it "should start HTTP server"
-      it "should notify 'alive' message"
+
+      it "should notify 'alive' message" do
+        em do
+          listener = SSDP.listen
+          count = 0
+          listener.notifications.subscribe do |notification|
+            expect(notification['nts']).to eq('ssdp:alive')
+            count += 1
+          end
+          device.start
+
+          EM.add_timer(2) do
+            expect(count).to eq(3 * RUPNP::SSDP::Notifier::DEFAULT_NOTIFY_TRY)
+            done
+          end
+        end
+      end
     end
 
     context "#stop" do
       it "should stop SSDP server"
       it "should stop HTTP server"
-      it "should notify 'byebye' messge"
+
+      it "should notify 'byebye' message" do
+        em do
+          device.start
+          EM.add_timer(1) do
+            listener = SSDP.listen
+            count = 0
+            listener.notifications.subscribe do |notification|
+              expect(notification['nts']).to eq('ssdp:byebye')
+              count += 1
+            end
+
+            device.stop
+
+            EM.add_timer(1) do
+              expect(count).to eq(3 * RUPNP::SSDP::Notifier::DEFAULT_NOTIFY_TRY)
+              done
+            end
+          end
+        end
+      end
     end
 
   end
