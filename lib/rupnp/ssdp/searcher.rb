@@ -15,13 +15,13 @@ module RUPNP
 
 
     # @param [Hash] options
+    # @option options [String] :search_target
     # @option options [Integer] :response_wait_time
     # @option options [Integer] :try_number
     # @option options [Integer] :ttl
     def initialize(options={})
-      @m_search = SSDP::M_Search.new(options[:search_target],
-                                     options[:response_wait_time]).to_s
-      @m_search_count = options[:try_number] || DEFAULT_M_SEARCH_TRY
+      @options = options
+      @options[:try_number] ||= DEFAULT_M_SEARCH_TRY
       @discovery_responses = EM::Channel.new
 
       super options[:ttl]
@@ -29,9 +29,10 @@ module RUPNP
 
     # @private
     def post_init
-      @m_search_count.times do
-        send_datagram @m_search, MULTICAST_IP, DISCOVERY_PORT
-        log :debug, "send datagram:\n#{@m_search}"
+      search = search_request
+      @options[:try_number].times do
+        send_datagram search, MULTICAST_IP, DISCOVERY_PORT
+        log :debug, "send datagram:\n#{search}"
       end
     end
 
@@ -47,6 +48,21 @@ module RUPNP
       end
 
       @discovery_responses << get_http_headers(response)
+    end
+
+
+    private
+
+    def search_request
+      <<EOR
+M-SEARCH * HTTP/1.1\r
+HOST: #{MULTICAST_IP}:#{DISCOVERY_PORT}\r
+MAN: "ssdp:discover"\r
+MX: #{@options[:response_wait_time]}\r
+ST: #{@options[:search_target]}\r
+USER-AGENT: #{USER_AGENT}\r
+\r
+EOR
     end
 
   end
