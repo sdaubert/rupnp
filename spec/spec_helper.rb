@@ -41,7 +41,6 @@ NOTIFY_REGEX = {
              /HOST: 239\.255\.255\.250:1900\r\n/,
              /NT: [0-9A-Za-z:-]+\r\n/,
              /NTS: ssdp:(alive|byebye)\r\n/,
-             /SERVER: (.*)\r\n/,
              /USN: uuid:(.*)\r\n/,
              /BOOTID.UPNP.ORG: \d+\r\n/,
              /CONFIGID.UPNP.ORG: \d+\r\n/,
