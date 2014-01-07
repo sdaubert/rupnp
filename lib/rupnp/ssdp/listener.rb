@@ -29,6 +29,8 @@ module RUPNP
       if h.nil?
         log :warn, "No HTTP command"
         return
+      elsif h[:verb] == 'M-SEARCH'
+        return
       elsif !(h[:verb].upcase == 'NOTIFY' and h[:path] == '*' and
               h[:http_version] == '1.1')
         log :warn, "Unknown HTTP command: #{h[:cmd]}"
