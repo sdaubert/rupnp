@@ -6,7 +6,39 @@ module RUPNP
     describe Listener do
       include EM::SpecHelper
 
-      it "should receive alive and byebye notifications"
+      it "should receive alive and byebye notifications" do
+        RUPNP.log_level = :failure
+        em do
+          notifications = []
+          listener = SSDP.listen
+          listener.notifications.subscribe do |notification|
+            notifications << notification
+          end
+
+          EM.add_timer(1) do
+            options = {
+              max_age: 10,
+              ip: '127.0.0.1',
+              port: 65534,
+              uuid: UUID.generate,
+              boot_id: 1,
+              config_id: 1,
+              u_search_port: DISCOVERY_PORT,
+              try_number: 1
+            }
+            SSDP.notify :root, :alive, options
+            SSDP.notify :root, :byebye, options
+          end
+
+          EM.add_timer(2) do
+            listener.close_connection
+            expect(notifications).to have(2).items
+            expect(notifications[0]['nts']).to eq('ssdp:alive')
+            expect(notifications[1]['nts']).to eq('ssdp:byebye')
+            done
+          end
+        end
+      end
 
       it "should ignore M-SEARCH requests" do
         rd_io, wr_io = IO.pipe

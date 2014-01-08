@@ -16,7 +16,7 @@ module RUPNP
     def initialize(type, subtype, options={})
       @type = (type == :root) ? 'upnp:rootdevice' : type
       @subtype = subtype
-      @notify_count = options.delete(:try_number) || DEFAULT_NOTIFY_TRY
+      @notify_count = options[:try_number] || DEFAULT_NOTIFY_TRY
       @options = options
 
       super options.delete(:ttl)
