@@ -30,6 +30,7 @@ EOF
 
   s.add_development_dependency 'rspec', '~>2.14.7'
   s.add_development_dependency 'em-spec', '~>0.2.6'
+  s.add_development_dependency 'simplecov', '~>0.8.2'
 end
 
 

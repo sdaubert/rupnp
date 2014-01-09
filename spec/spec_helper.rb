@@ -1,3 +1,6 @@
+require 'simplecov'
+SimpleCov.start
+
 $:.unshift '../lib'
 require 'rupnp'
 require 'em-spec/rspec'
