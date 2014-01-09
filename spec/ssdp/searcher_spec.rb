@@ -47,6 +47,8 @@ module RUPNP
         end
       end
 
+      it "should discard and log bad responses"
+
     end
 
   end
