@@ -7,6 +7,8 @@ $:.unshift '../lib'
 require 'rupnp'
 require 'em-spec/rspec'
 
+RUPNP.log_level = :failure
+
 
 class FakeMulticast < RUPNP::SSDP::MulticastConnection
   attr_reader :handshake_response, :packets
@@ -27,6 +29,32 @@ class FakeMulticast < RUPNP::SSDP::MulticastConnection
     @onclose.call if defined? @onclose
   end
 
+end
+
+
+def generate_search_responder(uuid)
+  responder = EM.open_datagram_socket(RUPNP::MULTICAST_IP,
+                                      RUPNP::DISCOVERY_PORT,
+                                      FakeMulticast)
+  responder.onmessage do |data|
+    data =~ /ST: (.*)\r\n/
+    target = $1
+    response =<<EOR
+HTTP/1.1 200 OK\r
+CACHE-CONTROL: max-age = 1800\r
+DATE: #{Time.now}\r
+EXT:\r
+LOCATION: http://127.0.0.1:1234\r
+SERVER: OS/1.0 UPnP/1.1 Test/1.0\r
+ST: #{target}\r
+USN: uuid:#{uuid}::upnp:rootdevice\r
+BOOTID.UPNP.ORG: 1\r
+CONFIGID.UPNP.ORG: 1\r
+\r
+EOR
+    p response
+    responder.send_data response
+  end
 end
 
 
@@ -77,3 +105,4 @@ RSpec::Matchers.define :be_a_msearch_packet do
     success && packet[-4..-1] == "\r\n\r\n"
   end
 end
+

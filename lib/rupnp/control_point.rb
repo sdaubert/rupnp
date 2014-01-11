@@ -63,6 +63,10 @@ module RUPNP
       yield @new_device_channel, @bye_device_channel
     end
 
+    # Start a search for devices. No listen for update is made.
+    #
+    # Found devices are accessible through {#devices}.
+    # @return [void]
     def search_only
       options = @search_options.dup
       options[:search_only] = true
@@ -73,8 +77,8 @@ module RUPNP
     # @param [Integer] port port to listen for
     # @return [void]
     def start_event_server(port=EVENT_SUB_DEFAULT_PORT)
-      @event_port = port
-      @add_event_url = EM::Channel.new
+      @event_port ||= port
+      @add_event_url ||= EM::Channel.new
       @event_server ||= EM.start_server('0.0.0.0', port, CP::EventServer,
                                         @add_event_url)
     end
@@ -83,7 +87,9 @@ module RUPNP
     # @see #start_event_server
     # @return [void]
     def stop_event_server
+      @event_port = nil
       EM.stop_server @event_server
+      @event_server = nil
     end
 
     # Add a device to the control point
