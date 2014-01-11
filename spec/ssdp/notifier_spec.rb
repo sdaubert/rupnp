@@ -18,7 +18,6 @@ module RUPNP
 
       [:alive, :update, :byebye].each do |type|
         it "should send 2 #{type} notify packets" do
-          pending if type == :update
           em do
             receiver = EM.open_datagram_socket(MULTICAST_IP, DISCOVERY_PORT,
                                                FakeMulticast)

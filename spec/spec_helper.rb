@@ -31,30 +31,34 @@ end
 
 
 NOTIFY_REGEX = {
-  :alive => [/^NOTIFY \* HTTP\/1.1\r\n/,
-             /HOST: 239\.255\.255\.250:1900\r\n/,
+  :common => [
+              /^NOTIFY \* HTTP\/1.1\r\n/,
+              /HOST: 239\.255\.255\.250:1900\r\n/,
+              /NT: [0-9A-Za-z:-]+\r\n/,
+              /USN: uuid:(.*)\r\n/,
+              /BOOTID.UPNP.ORG: \d+\r\n/,
+              /CONFIGID.UPNP.ORG: \d+\r\n/,
+             ].freeze,
+  :alive => [
              /CACHE-CONTROL:\s+max-age\s+=\s+\d+\r\n/,
              /LOCATION: http:\/\/(.*)\r\n/,
-             /NT: [0-9A-Za-z:-]+\r\n/,
-             /NTS: ssdp:(alive|byebye)\r\n/,
+             /NTS: ssdp:alive\r\n/,
              /SERVER: (.*)\r\n/,
-             /USN: uuid:(.*)\r\n/,
-             /BOOTID.UPNP.ORG: \d+\r\n/,
-             /CONFIGID.UPNP.ORG: \d+\r\n/,
             ].freeze,
-  :byebye => [/^NOTIFY \* HTTP\/1.1\r\n/,
-             /HOST: 239\.255\.255\.250:1900\r\n/,
-             /NT: [0-9A-Za-z:-]+\r\n/,
-             /NTS: ssdp:(alive|byebye)\r\n/,
-             /USN: uuid:(.*)\r\n/,
-             /BOOTID.UPNP.ORG: \d+\r\n/,
-             /CONFIGID.UPNP.ORG: \d+\r\n/,
-            ].freeze,
+  :byebye => [
+              /NTS: ssdp:byebye\r\n/,
+             ].freeze,
+  :update => [
+              /LOCATION: http:\/\/(.*)\r\n/,
+              /NTS: ssdp:update\r\n/,
+              /NEXTBOOTID.UPNP.ORG: \d+\r\n/,
+             ].freeze
 }
 
 RSpec::Matchers.define :be_a_notify_packet do |type|
   match do |packet|
-    success = NOTIFY_REGEX[type].all? { |r| packet.match(r) }
+    success = NOTIFY_REGEX[:common].all? { |r| packet.match(r) }
+    success &&= NOTIFY_REGEX[type].all? { |r| packet.match(r) }
     success && packet[-4..-1] == "\r\n\r\n"
   end
 end
