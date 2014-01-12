@@ -6,6 +6,7 @@ end
 $:.unshift '../lib'
 require 'rupnp'
 require 'em-spec/rspec'
+require 'webmock/rspec'
 
 RUPNP.log_level = :failure
 
@@ -32,7 +33,7 @@ class FakeMulticast < RUPNP::SSDP::MulticastConnection
 end
 
 
-def generate_search_responder(uuid)
+def generate_search_responder(uuid, port)
   responder = EM.open_datagram_socket(RUPNP::MULTICAST_IP,
                                       RUPNP::DISCOVERY_PORT,
                                       FakeMulticast)
@@ -44,7 +45,7 @@ HTTP/1.1 200 OK\r
 CACHE-CONTROL: max-age = 1800\r
 DATE: #{Time.now}\r
 EXT:\r
-LOCATION: http://127.0.0.1:1234\r
+LOCATION: http://127.0.0.1:#{port}\r
 SERVER: OS/1.0 UPnP/1.1 Test/1.0\r
 ST: #{target}\r
 USN: uuid:#{uuid}::upnp:rootdevice\r
@@ -52,9 +53,28 @@ BOOTID.UPNP.ORG: 1\r
 CONFIGID.UPNP.ORG: 1\r
 \r
 EOR
-    p response
     responder.send_data response
   end
+end
+
+
+def generate_xml_device_description(uuid)
+  <<EOD
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0" configId="1">
+  <specVersion>
+    <major>1</major>
+    <minor>1</minor>
+  </specVersion>
+  <device>
+    <deviceType>urn:schemas-upnp-org:device:Base:1-0</deviceType>
+    <friendlyName>Friendly name</friendlyName>
+    <manufacturer>RUPNP</manufacturer>
+    <modelName>Model name</modelName>
+    <UDN>uuid:#{uuid}</UDN>
+  </device>
+</root>
+EOD
 end
 
 

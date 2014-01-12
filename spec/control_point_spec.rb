@@ -13,18 +13,23 @@ module RUPNP
     end
 
     it '#search_only should detect devices' do
-      # TODO: use webmock to catch HTTP request getting device description
       em do
-        uuid = UUID.generate
-        generate_search_responder uuid
-        generate_search_responder uuid
-        uuid = UUID.generate
-        generate_search_responder uuid
+        uuid1 = UUID.generate
+        generate_search_responder uuid1, 1234
+        generate_search_responder uuid1, 1234
+        uuid2 = UUID.generate
+        generate_search_responder uuid2, 1235
+
+        stub_request(:get, '127.0.0.1:1234').to_return :headers => {
+          'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
+        }, :body => generate_xml_device_description(uuid1)
+        stub_request(:get, '127.0.0.1:1235').to_return :headers => {
+          'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
+        }, :body => generate_xml_device_description(uuid2)
 
         cp.search_only
 
         EM.add_timer(1) do
-          p cp.devices
           expect(cp.devices).to have(2).item
           done
         end

@@ -210,6 +210,7 @@ module RUPNP
     end
 
     def extract_icons
+      return unless @description[:root][:device][:icon_list]
       @description[:root][:device][:icon_list][:icon].each do |h|
         icon = OpenStruct.new(h)
         icon.url = build_url(@url_base, icon.url)
