@@ -5,7 +5,17 @@ module RUPNP
   describe ControlPoint do
     include EM::SpecHelper
 
-    let(:cp) { ControlPoint.new(:all) }
+    let(:cp) { ControlPoint.new(:all, :response_wait_time => 1) }
+    let(:notify_options) { {
+        max_age: 10,
+        ip: '127.0.0.1',
+        port: 1234,
+        uuid: UUID.generate,
+        boot_id: 1,
+        config_id: 1,
+        u_search_port: DISCOVERY_PORT,
+        try_number: 1
+      } }
 
     it 'should initialize a new instance' do
       expect(cp.devices).to be_a(Array)
@@ -45,7 +55,6 @@ module RUPNP
           'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
         }, :body => generate_xml_device_description(uuid)
 
-        cp = ControlPoint.new(:all, :response_wait_time => 1)
         cp.search_only
 
         EM.add_timer(2) do
@@ -59,7 +68,52 @@ module RUPNP
       end
     end
 
-    it '#start should listen for alive, update or byebye notifications from devices'
+    it '#start should listen for alive notifications' do
+      em do
+        cp.start
+        stub_request(:get, '127.0.0.1:1234/root_description.xml').
+          to_return :headers => {
+            'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
+          }, :body => generate_xml_device_description(notify_options[:uuid])
+
+        EM.add_timer(2) do
+          expect(cp.devices).to be_empty
+          SSDP.notify :root, :alive, notify_options
+          EM.add_timer(1) do
+            expect(cp.devices).to have(1).item
+            expect(cp.devices[0].udn).to eq(notify_options[:uuid])
+            done
+          end
+        end
+      end
+    end
+
+    it '#start should listen for update notifications'
+
+    it '#start should listen for byebye notifications' do
+      em do
+        cp.start
+        stub_request(:get, '127.0.0.1:1234/root_description.xml').
+          to_return :headers => {
+            'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
+          }, :body => generate_xml_device_description(notify_options[:uuid])
+
+        EM.add_timer(2) do
+          expect(cp.devices).to be_empty
+          SSDP.notify :root, :alive, notify_options
+          EM.add_timer(1) do
+            expect(cp.devices).to have(1).item
+            expect(cp.devices[0].udn).to eq(notify_options[:uuid])
+            SSDP.notify :root, :byebye, notify_options
+            EM.add_timer(1) do
+              expect(cp.devices).to be_empty
+              done
+            end
+          end
+        end
+      end
+    end
+
     it '#find_device_by_udn should get known devices'
   end
 

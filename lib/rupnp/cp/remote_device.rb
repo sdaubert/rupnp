@@ -204,7 +204,7 @@ module RUPNP
       @model_number = device[:model_number] || ''
       @model_url = device[:model_url] || ''
       @serial_umber = device[:serial_number] || ''
-      @udn = device[:udn]
+      @udn = device[:udn].gsub(/uuid:/, '')
       @upc = device[:upc] || ''
       @presentation_url = device[:presentation_url] || ''
     end

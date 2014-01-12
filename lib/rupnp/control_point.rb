@@ -141,8 +141,7 @@ module RUPNP
             when 'ssdp:byebye'
               udn = usn2udn(notification['usn'])
               log :info, "byebye notification sent by device #{udn}"
-              rejected = @devices.reject! { |d| d.udn == udn }
-              log :info, "#{rejected.udn} device removed" if rejected
+              @devices.reject! { |d| d.udn == udn }
             else
               log :warn, "Unknown notification type: #{notification['nts']}"
             end
