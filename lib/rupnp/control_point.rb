@@ -60,7 +60,7 @@ module RUPNP
     # @return [void]
     def start
       search_devices_and_listen @search_target, @search_options
-      yield @new_device_channel, @bye_device_channel
+      yield @new_device_channel, @bye_device_channel if block_given?
     end
 
     # Start a search for devices. No listen for update is made.
