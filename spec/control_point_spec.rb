@@ -28,10 +28,31 @@ module RUPNP
             'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
           }, :body => generate_xml_device_description(uuid2)
 
-          cp.search_only
+          cp.send meth
 
           EM.add_timer(1) do
             expect(cp.devices).to have(2).item
+            done
+          end
+        end
+      end
+    end
+
+    it '#search_only should not register devices after wait time is expired' do
+      em do
+        uuid = UUID.generate
+        stub_request(:get, '127.0.0.1:1234').to_return :headers => {
+          'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
+        }, :body => generate_xml_device_description(uuid)
+
+        cp = ControlPoint.new(:all, :response_wait_time => 1)
+        cp.search_only
+
+        EM.add_timer(2) do
+          expect(cp.devices).to be_empty
+          generate_search_responder uuid, 1234
+          EM.add_timer(1) do
+            expect(cp.devices).to be_empty
             done
           end
         end
