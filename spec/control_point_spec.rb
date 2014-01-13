@@ -88,7 +88,29 @@ module RUPNP
       end
     end
 
-    it '#start should listen for update notifications'
+    it '#start should listen for update notifications' do
+      em do
+        cp.start
+        stub_request(:get, '127.0.0.1:1234/root_description.xml').
+          to_return :headers => {
+            'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
+          }, :body => generate_xml_device_description(notify_options[:uuid])
+
+        EM.add_timer(2) do
+          expect(cp.devices).to be_empty
+          SSDP.notify :root, :alive, notify_options
+          EM.add_timer(1) do
+            SSDP.notify :root, :update, notify_options.merge(boot_id: 2)
+            EM.add_timer(1) do
+              expect(cp.devices).to have(1).item
+              expect(cp.devices[0].udn).to eq(notify_options[:uuid])
+              expect(cp.devices[0].boot_id).to eq(2)
+              done
+            end
+          end
+        end
+      end
+    end
 
     it '#start should listen for byebye notifications' do
       em do

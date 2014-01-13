@@ -135,11 +135,17 @@ module RUPNP
           listener = SSDP.listen
 
           listener.notifications.subscribe do |notification|
+            udn = usn2udn(notification['usn'])
+
             case notification['nts']
-            when 'ssdp:alive'
-              create_device notification
+            when 'ssdp:alive', 'ssdp:update'
+              d = @devices.find { |d| d.udn == udn }
+              if d
+                d.update notification
+              else
+                create_device notification
+              end
             when 'ssdp:byebye'
-              udn = usn2udn(notification['usn'])
               log :info, "byebye notification sent by device #{udn}"
               @devices.reject! { |d| d.udn == udn }
             else

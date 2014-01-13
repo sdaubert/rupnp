@@ -7,6 +7,12 @@ module RUPNP
   # A device is a UPnP service provider.
   # @author Sylvain Daubert.
   class CP::RemoteDevice < CP::Base
+
+    # Number of seconds the advertisement is valid.
+    # Used when +ssdp:update+ advertisement is received but no
+    # previuous +ssdp:alive+ was received.
+    DEFAULT_MAX_AGE = 600
+
     # Get control point which controls this device
     # @return [ControlPoint]
     attr_reader :control_point
@@ -34,6 +40,12 @@ module RUPNP
     # Expiration time for the advertisement
     # @return [Time]
     attr_reader :expiration
+    # BOOTID.UPNP.ORG field value
+    # @return [Integer]
+    attr_reader :boot_id
+    # CONFIGID.UPNP.ORG field value
+    # @return [nil, Integer]
+    attr_reader :config_id
 
     # UPnP version used by the device
     # @return [String]
@@ -106,6 +118,16 @@ module RUPNP
     # Get device from its description
     # @return [void]
     def fetch
+      if @notification['nextbootid.upnp.org']
+        @boot_id = @notification['nextbootid.upnp.org'].to_i
+      elsif @notification['bootid.upnp.org']
+        @boot_id = @notification['bootid.upnp.org'].to_i
+      else
+        fail self, 'no BOOTID.UPNP.ORG field. Message discarded.'
+      end
+      @config_id = @notification['confgid.upnp.org']
+      @config_id = @config_id.to_i if @config_id
+
       description_getter = EM::DefaultDeferrable.new
 
       description_getter.errback do
@@ -143,6 +165,17 @@ module RUPNP
       end
     end
 
+    # Update a device from a ssdp:update notification
+    # @param [String] notification
+    # @return [void]
+    def update(notification)
+      update_expiration notification
+      @boot_id = notification['nextbootid.upnp.org'].to_i
+      if notification['configid.upnp.org']
+        @config_id = notification['configid.upnp.org'].to_i
+      end
+    end
+
 
     private
 
@@ -153,15 +186,8 @@ module RUPNP
       @server = @notification['server']
       @location = @notification['location']
       @ext = @notification['ext']
-      @date = @notification['date'] || ''
-      @cache_control = @notification['cache-control'] || ''
 
-      max_age = @cache_control.match(/max-age\s*=\s*(\d+)/)[1].to_i
-      @expiration = if @date.empty?
-                      Time.now + max_age
-                    else
-                      Time.parse(@date) + max_age
-                    end
+      update_expiration @notification
 
       if @location
         get_description @location, getter
@@ -265,6 +291,18 @@ module RUPNP
         name = snake_case($1).to_sym
         define_singleton_method(name) { service }
       end
+    end
+
+    def update_expiration(notification)
+      @date = @notification['date'] || ''
+      @cache_control = @notification['cache-control'] || ''
+
+      if @notification['nts'] == 'ssdp:alive'
+        max_age = @cache_control.match(/max-age\s*=\s*(\d+)/)[1].to_i
+      else
+        max_age = DEFAULT_MAX_AGE
+      end
+      @expiration = (@date.empty? ? Time.now : Time.parse(@date)) + max_age
     end
 
   end
