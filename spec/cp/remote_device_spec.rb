@@ -6,11 +6,12 @@ module RUPNP
     describe RemoteDevice do
       include EM::SpecHelper
 
+      let(:location) { 'http://127.0.0.1:1234/root_description.xml' }
       let(:notification) { {
           'cache-control' => 'max-age=1800',
           'date' => Time.now.strftime("%a, %d %b %Y %H:%M:%S %Z"),
           'ext' => '',
-          'location' => 'http://127.0.0.1/root_description.xml',
+          'location' => location,
           'server' => 'OS/1.0 UPnP/1.1 TEST/1.0',
           'st' => 'upnp:rootdevice',
           'usn' =>  "uuid:#{UUID.generate}::upnp:rootdevice",
@@ -30,7 +31,15 @@ module RUPNP
           end
         end
 
-        it "should fail when location is unreachable"
+        it "should fail when location is unreachable" do
+          em do
+            stub_request(:get, location).to_timeout#.to_return(:status => 404)
+            rd.errback { done }
+            rd.callback { fail 'RemoteDevice#fetch should not work' }
+            rd.fetch
+          end
+        end
+
         it "should fail when description is not a UPnP 1.x response"
         it "should fail when description is blank"
         it "should fail when description is not conform to UPnP specifications"

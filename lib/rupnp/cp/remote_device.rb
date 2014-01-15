@@ -135,6 +135,7 @@ module RUPNP
         msg = "Failed getting description"
         log :error, "Fetching device: #{msg}"
         fail self, msg
+        next
       end
 
       extract_from_ssdp_notification description_getter
