@@ -124,6 +124,7 @@ module RUPNP
         @boot_id = @notification['bootid.upnp.org'].to_i
       else
         fail self, 'no BOOTID.UPNP.ORG field. Message discarded.'
+        return
       end
       @config_id = @notification['confgid.upnp.org']
       @config_id = @config_id.to_i if @config_id
