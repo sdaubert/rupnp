@@ -50,6 +50,7 @@ module RUPNP
           unless h['SERVER'] =~ /UPnP\/1\.\d/
             log :error, "Not a supported UPnP response : #{h['SERVER']}"
             http.cancel_callback callback
+            http.fail
           end
         end
 

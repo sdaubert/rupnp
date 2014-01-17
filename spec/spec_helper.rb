@@ -58,7 +58,12 @@ EOR
 end
 
 
-def generate_xml_device_description(uuid)
+def generate_xml_device_description(uuid, options={})
+  opt = {
+    :version_major => 1,
+    :version_minor => 1,
+  }.merge(options)
+
   <<EOD
 <?xml version="1.0"?>
 <root xmlns="urn:schemas-upnp-org:device-1-0" configId="1">
