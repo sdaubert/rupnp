@@ -136,7 +136,17 @@ module RUPNP
       end
     end
 
-    it '#find_device_by_udn should get known devices'
+    it '#find_device_by_udn should get known devices' do
+      uuid1 = UUID.generate
+      cp.devices << double('rdevice1', :udn => uuid1)
+      uuid2 = UUID.generate
+      cp.devices << double('rdevice2', :udn => uuid2)
+      uuid3 = UUID.generate
+
+      expect(cp.find_device_by_udn(uuid1)).to eq(cp.devices[0])
+      expect(cp.find_device_by_udn(uuid2)).to eq(cp.devices[1])
+      expect(cp.find_device_by_udn(uuid3)).to be_nil
+    end
   end
 
 end
