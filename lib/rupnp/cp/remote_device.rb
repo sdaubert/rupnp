@@ -142,28 +142,26 @@ module RUPNP
 
       description_getter.callback do |description|
         @description = description
-        unless description
+        if !description
           fail self, 'Blank description returned'
           next
-        end
-
-        if bad_description?
+        elsif bad_description?
           fail self, "Bad description returned: #@description"
           next
+        else
+          extract_url_base
+          extract_device_info
+          extract_icons
+
+          @services_extracted = @devices_extracted = false
+          extract_services
+          extract_devices
+
+          tick_loop = EM.tick_loop do
+            :stop if @services_extracted and @devices_extracted
+          end
+          tick_loop.on_stop { succeed self }
         end
-
-        extract_url_base
-        extract_device_info
-        extract_icons
-
-        @services_extracted = @devices_extracted = false
-        extract_services
-        extract_devices
-
-        tick_loop = EM.tick_loop do
-          :stop if @services_extracted and @devices_extracted
-        end
-        tick_loop.on_stop { succeed self }
       end
     end
 

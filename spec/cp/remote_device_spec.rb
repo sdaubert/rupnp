@@ -51,8 +51,6 @@ module RUPNP
 
         it "should fail when description header is not a UPnP 1.x response" do
           em do
-            rd2 = rd.dup
-
             stub_request(:get, location).
               to_return(:body => generate_xml_device_description(uuid),
                         :headers => { 'SERVER' => 'Linux/1.2 Apache/1.0' })
@@ -66,12 +64,12 @@ module RUPNP
                 to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/0.9 TEST/1.0'},
                           :body => desc)
 
-              rd2.errback do |dev, msg|
-                expect(dev).to eq(rd2)
+              rd.errback do |dev, msg|
+                expect(dev).to eq(rd)
                 expect(msg).to match(/Failed getting description/)
                 done
               end
-              rd2.fetch
+              rd.fetch
             end
             rd.callback { fail 'RemoteDevice#fetch should not work' }
             rd.fetch
