@@ -156,7 +156,7 @@ module RUPNP
       end
 
       searcher.discovery_responses.subscribe do |notification|
-        log :debug, 'receive a notification'
+        log :debug, "receive a notification:\n#{notification}"
         create_device notification
       end
     end

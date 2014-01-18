@@ -39,7 +39,8 @@ module RUPNP
     # @private
     def receive_data(data)
       port, ip = peer_info
-      log :debug, "Response from #{ip}:#{port}"
+      log :debug, "Response from #{ip}:#{port}:"
+      log :debug, data
 
       response = StringIO.new(data)
       if !is_http_status_ok?(response)
