@@ -6,6 +6,17 @@ module RUPNP
     describe RemoteDevice do
       include EM::SpecHelper
 
+      DESCRIPTIONS =
+        ['this is not a UPnP description',
+         '<?xml version="1.0"?><tag>UPnP</tag>',
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-0-9" configId="1"></root>',
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"></root>',
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version></spec_version></root>',
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>0</major><minor>9</minor></spec_version></root>',
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>1</major><minor>9</minor></spec_version></root>',
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>1</major><minor>9</minor></spec_version><device></device></root>',]
+
+
       let(:location) { 'http://127.0.0.1:1234/root_description.xml' }
       let(:uuid) { UUID.generate }
       let(:notification) { {
@@ -76,8 +87,24 @@ module RUPNP
           end
         end
 
-        it "should fail when description is blank"
-        it "should fail when description is not conform to UPnP specifications"
+        it "should fail when description does not conform to UPnP spec" do
+          DESCRIPTIONS.each do |desc|
+            em do
+              stub_request(:get, location).
+                to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                          :body => desc)
+
+              rd.errback do |dev, msg|
+                expect(dev).to eq(rd)
+                expect(msg).to match(/Bad description/)
+                done
+              end
+              rd.callback { fail 'RemoteDevice#fetch should not work' }
+              rd.fetch
+            end
+          end
+        end
+
         it "should fetch its description"
         it "should extract services if any"
         it "should not fail when a service cannot be extracted"

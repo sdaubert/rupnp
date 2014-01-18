@@ -142,10 +142,7 @@ module RUPNP
 
       description_getter.callback do |description|
         @description = description
-        if !description
-          fail self, 'Blank description returned'
-          next
-        elsif bad_description?
+      if bad_description?
           fail self, "Bad description returned: #@description"
           next
         else
@@ -198,13 +195,14 @@ module RUPNP
 
     def bad_description?
       if @description[:root]
-        bd = false
         @xmlns = @description[:root][:@xmlns]
-        bd |= @xmlns != 'urn:schemas-upnp-org:device-1-0'
-        bd |= @description[:root][:spec_version][:major].to_i != 1
+        return true unless @xmlns == 'urn:schemas-upnp-org:device-1-0'
+        return true unless @description[:root][:spec_version]
+        return true unless @description[:root][:spec_version][:major].to_i == 1
         @upnp_version = @description[:root][:spec_version][:major] + '.'
         @upnp_version += @description[:root][:spec_version][:minor]
-        bd |= !@description[:root][:device]
+        return true unless @description[:root][:device]
+        false
       else
         true
       end
