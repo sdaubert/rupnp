@@ -47,6 +47,18 @@ module RUPNP
           end
         end
 
+        it "should accept headers without BOOTID for UPnP 1.0 response" do
+          notification.delete 'bootid.upnp.org'
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.0 TEST/1.0'},
+                          :body => generate_xml_device_description(uuid))
+            rd.errback { fail 'RemoteDevice#fetch should work' }
+            rd.callback { done }
+            rd.fetch
+          end
+        end
+
         it "should fail when location is unreachable" do
           em do
             stub_request(:get, location).to_timeout
@@ -61,16 +73,17 @@ module RUPNP
         end
 
         it "should fail when description header is not a UPnP 1.x response" do
+          desc = generate_xml_device_description(uuid)
           em do
             stub_request(:get, location).
               to_return(:body => generate_xml_device_description(uuid),
-                        :headers => { 'SERVER' => 'Linux/1.2 Apache/1.0' })
+                        :headers => { 'SERVER' => 'Linux/1.2 Apache/1.0' },
+                        :body => desc)
 
             rd.errback do |dev, msg|
               expect(dev).to eq(rd)
               expect(msg).to match(/Failed getting description/)
 
-              desc = generate_xml_device_description(uuid, :spec_major => 0)
               stub_request(:get, location).
                 to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/0.9 TEST/1.0'},
                           :body => desc)
@@ -105,7 +118,19 @@ module RUPNP
           end
         end
 
-        it "should fetch its description"
+        it "should fetch its description" do
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                          :body => generate_xml_device_description(uuid))
+            rd.errback { fail 'RemoteDevice#fetch should work' }
+            rd.callback do
+              done
+            end
+            rd.fetch
+          end
+        end
+
         it "should extract services if any"
         it "should not fail when a service cannot be extracted"
       end
