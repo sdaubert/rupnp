@@ -64,6 +64,9 @@ module RUPNP
     # Get service type
     # @return [String]
     attr_reader :type
+    # Get service id
+    # @return [String]
+    attr_reader :id
     # URL for service description
     # @return [String]
     attr_reader :scpd_url
@@ -96,6 +99,7 @@ module RUPNP
       @description = service
 
       @type = service[:service_type].to_s
+      @id = service[:service_id].to_s
       @scpd_url = build_url(url_base,  service[:scpdurl].to_s)
       @control_url =  build_url(url_base, service[:control_url].to_s)
       @event_sub_url =  build_url(url_base, service[:event_sub_url].to_s)

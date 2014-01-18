@@ -49,6 +49,7 @@ module RUPNP
 
         it "should accept headers without BOOTID for UPnP 1.0 response" do
           notification.delete 'bootid.upnp.org'
+          notification['server'] = 'OS/1.0 UPnP/1.0 TEST/1.0'
           em do
             stub_request(:get, location).
               to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.0 TEST/1.0'},
