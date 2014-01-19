@@ -118,11 +118,12 @@ module RUPNP
     # Get device from its description
     # @return [void]
     def fetch
+      upnp_minor_ver = @notification['server'].match(/UPnP\/1\.(\d)/)[1].to_i
       if @notification['nextbootid.upnp.org']
         @boot_id = @notification['nextbootid.upnp.org'].to_i
       elsif @notification['bootid.upnp.org']
         @boot_id = @notification['bootid.upnp.org'].to_i
-      else
+      elsif upnp_minor_ver > 0
         fail self, 'no BOOTID.UPNP.ORG field. Message discarded.'
         return
       end
@@ -292,10 +293,10 @@ module RUPNP
     end
 
     def update_expiration(notification)
-      @date = @notification['date'] || ''
-      @cache_control = @notification['cache-control'] || ''
+      @date = notification['date'] || ''
+      @cache_control = notification['cache-control'] || ''
 
-      if @notification['nts'] == 'ssdp:alive'
+      if notification['nts'] == 'ssdp:alive' or @cache_control != ''
         max_age = @cache_control.match(/max-age\s*=\s*(\d+)/)[1].to_i
       else
         max_age = DEFAULT_MAX_AGE

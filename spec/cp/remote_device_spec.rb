@@ -19,8 +19,9 @@ module RUPNP
 
       let(:location) { 'http://127.0.0.1:1234/root_description.xml' }
       let(:uuid) { UUID.generate }
+      let(:max_age) { 1800 }
       let(:notification) { {
-          'cache-control' => 'max-age=1800',
+          'cache-control' => "max-age=#{max_age}",
           'date' => Time.now.strftime("%a, %d %b %Y %H:%M:%S %Z"),
           'ext' => '',
           'location' => location,
@@ -137,7 +138,29 @@ module RUPNP
       end
 
       context "#update" do
-        it 'should update expiration date'
+        it 'should update expiration date' do
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                        :body => generate_xml_device_description(uuid))
+            rd.errback { fail 'RemoteDevice#fetch should work' }
+            rd.callback do
+              not2 = notification.dup
+              expiration_old = Time.parse(notification['date']) + max_age
+
+              not2['date'] = (Time.now + 5).strftime("%a, %d %b %Y %H:%M:%S %Z")
+              expiration_new = Time.parse(not2['date']) + max_age
+
+              expect(not2['date']).not_to eq(notification['date'])
+              expect(rd.expiration).to eq(expiration_old)
+              rd.update(not2)
+              expect(rd.expiration).to eq(expiration_new)
+              done
+            end
+            rd.fetch
+          end
+        end
+
         it 'should update BOOTID'
         it 'should update CONFIGID.UPNP.ORG'
       end
