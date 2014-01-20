@@ -14,7 +14,7 @@ module RUPNP
          '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version></spec_version></root>',
          '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>0</major><minor>9</minor></spec_version></root>',
          '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>1</major><minor>9</minor></spec_version></root>',
-         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>1</major><minor>9</minor></spec_version><device></device></root>',]
+         '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0" configId="1"><spec_version><major>1</major><minor>9</minor></spec_version><device></device></root>']
 
 
       let(:location) { 'http://127.0.0.1:1234/root_description.xml' }
@@ -133,7 +133,28 @@ module RUPNP
           end
         end
 
-        it "should extract services if any"
+        it "should extract services if any" do
+          dev_desc = generate_xml_device_description(uuid, :device_type => 'MediaServer')
+          scpd = generate_scpd
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                        :body => dev_desc)
+            stub_request(:get, 'http://127.0.0.1:1234/cd/description.xml').
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                        :body => scpd)
+            stub_request(:get, 'http://127.0.0.1:1234/cd/control').
+              to_return(:status => 404)
+
+            rd.errback { |d, msg| fail msg }
+            rd.callback do
+              expect(rd.services).to have(1).item
+              done
+            end
+            rd.fetch
+          end
+        end
+
         it "should not fail when a service cannot be extracted"
       end
 

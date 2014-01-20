@@ -62,23 +62,65 @@ def generate_xml_device_description(uuid, options={})
   opt = {
     :version_major => 1,
     :version_minor => 1,
+    :device_type => :base,
   }.merge(options)
 
-  <<EOD
+  desc=<<EOD
 <?xml version="1.0"?>
-<root xmlns="urn:schemas-upnp-org:device-1-0" configId="1">
+<root xmlns="urn:schemas-upnp-org:device-1-0" configId="23">
   <specVersion>
-    <major>1</major>
-    <minor>1</minor>
+    <major>#{opt[:version_major]}</major>
+    <minor>#{opt[:version_minor]}</minor>
   </specVersion>
   <device>
-    <deviceType>urn:schemas-upnp-org:device:Base:1-0</deviceType>
+    <deviceType>urn:schemas-upnp-org:device:#{opt[:device_type].capitalize}:1-0</deviceType>
     <friendlyName>Friendly name</friendlyName>
     <manufacturer>RUPNP</manufacturer>
     <modelName>Model name</modelName>
     <UDN>uuid:#{uuid}</UDN>
-  </device>
-</root>
+EOD
+  if opt[:device_type] != :base
+    desc << <<EOD
+    <serviceList>
+      <service>
+        <serviceType>usrn:schemas-upnp-org:service:ContentDirectory:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>
+        <SCPDURL>/cd/description.xml</SCPDURL>
+        <ControlURL>/cd/control</ControlURL>
+        <EventURL></EventURL>
+      </service>
+    </serviceList>
+EOD
+  end
+  desc << "  </device>\n</root>\n"
+end
+
+
+def generate_scpd(options={})
+  opt = {
+    :version_major => 1,
+    :version_minor => 1,
+  }.merge(options)
+
+  scpd=<<EOD
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upnp-org:service-1-0" configId="23">
+  <specVersion>
+    <major>#{opt[:version_major]}</major>
+    <minor>#{opt[:version_minor]}</minor>
+  </specVersion>
+  <serviceStateTable>
+    <stateVariable sendEvents="no">
+      <name>X_variableName</name>
+      <dataType>ui4</dataType>
+      <defaultValue>0</defaultValue>
+      <allowedValueRange>
+        <minimum>0</minimum>
+        <maximum>63</maximum>
+      </allowedValueRange>
+    </stateVariable>
+  </serviceStateTable>
+</scpd>
 EOD
 end
 

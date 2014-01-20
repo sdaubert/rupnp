@@ -208,6 +208,10 @@ EOR
     def extract_service_state_table(scpd)
       if scpd[:scpd][:service_state_table][:state_variable]
         @state_table = scpd[:scpd][:service_state_table][:state_variable]
+
+        if @state_table.is_a? Hash
+          @state_table = [@state_table]
+        end
         # ease debug print
         @state_table.each { |s| s.each { |k, v| s[k] = v.to_s } }
       end

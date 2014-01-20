@@ -248,6 +248,10 @@ module RUPNP
           @description[:root][:device][:service_list][:service]
         sl = @description[:root][:device][:service_list][:service]
 
+        if sl.is_a? Hash
+          sl = [sl]
+        end
+
         proc_each = Proc.new do |s, iter|
           service = CP::RemoteService.new(self, @url_base, s)
 
