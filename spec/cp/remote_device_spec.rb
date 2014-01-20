@@ -29,7 +29,7 @@ module RUPNP
           'st' => 'upnp:rootdevice',
           'usn' =>  "uuid:#{uuid}::upnp:rootdevice",
           'bootid.upnp.org' => 10,
-          'confid.upnp.org' => 23,
+          'configid.upnp.org' => 23,
         } }
       let(:rd) { RemoteDevice.new(double('control_point'), notification)}
 
@@ -176,7 +176,21 @@ module RUPNP
         end
 
 
-        it 'should update CONFIGID.UPNP.ORG'
+        it 'should update CONFIGID.UPNP.ORG' do
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0' },
+                        :body => generate_xml_device_description(uuid))
+            rd.errback { fail 'RemoteDevice#fetch should work' }
+            rd.callback do
+              not2 = notification.merge('configid.upnp.org' => 47)
+              expect { rd.update(not2) }.to change{ rd.config_id }.
+                from(23).to(47)
+              done
+            end
+            rd.fetch
+          end
+        end
       end
 
     end
