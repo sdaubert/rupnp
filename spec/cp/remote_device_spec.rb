@@ -152,16 +152,30 @@ module RUPNP
               expiration_new = Time.parse(not2['date']) + max_age
 
               expect(not2['date']).not_to eq(notification['date'])
-              expect(rd.expiration).to eq(expiration_old)
-              rd.update(not2)
-              expect(rd.expiration).to eq(expiration_new)
+              expect { rd.update(not2) }.to change { rd.expiration }.
+                from(expiration_old).to(expiration_new)
               done
             end
             rd.fetch
           end
         end
 
-        it 'should update BOOTID'
+        it 'should update BOOTID' do
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0' },
+                        :body => generate_xml_device_description(uuid))
+            rd.errback { fail 'RemoteDevice#fetch should work' }
+            rd.callback do
+              not2 = notification.merge('nextbootid.upnp.org' => 15)
+              expect { rd.update(not2) }.to change{ rd.boot_id }.from(10).to(15)
+              done
+            end
+            rd.fetch
+          end
+        end
+
+
         it 'should update CONFIGID.UPNP.ORG'
       end
 
