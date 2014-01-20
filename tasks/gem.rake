@@ -28,7 +28,7 @@ EOF
   s.add_dependency 'savon', '~>2.3.0'
   s.add_dependency 'pry', '~>0.9.12'
 
-  s.add_development_dependency 'rspec', '~>2.14.7'
+  s.add_development_dependency 'rspec', '~>2.14.0'
   s.add_development_dependency 'em-spec', '~>0.2.6'
   s.add_development_dependency 'simplecov', '~>0.8.2'
   s.add_development_dependency 'webmock', '~>1.16.1'
