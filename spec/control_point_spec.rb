@@ -33,10 +33,10 @@ module RUPNP
 
           stub_request(:get, '127.0.0.1:1234').to_return :headers => {
             'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
-          }, :body => generate_xml_device_description(uuid1)
+          }, :body => generate_device_description(uuid1)
           stub_request(:get, '127.0.0.1:1235').to_return :headers => {
             'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
-          }, :body => generate_xml_device_description(uuid2)
+          }, :body => generate_device_description(uuid2)
 
           cp.send meth
 
@@ -53,7 +53,7 @@ module RUPNP
         uuid = UUID.generate
         stub_request(:get, '127.0.0.1:1234').to_return :headers => {
           'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
-        }, :body => generate_xml_device_description(uuid)
+        }, :body => generate_device_description(uuid)
 
         cp.search_only
 
@@ -74,7 +74,7 @@ module RUPNP
         stub_request(:get, '127.0.0.1:1234/root_description.xml').
           to_return :headers => {
             'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
-          }, :body => generate_xml_device_description(notify_options[:uuid])
+          }, :body => generate_device_description(notify_options[:uuid])
 
         EM.add_timer(2) do
           expect(cp.devices).to be_empty
@@ -94,7 +94,7 @@ module RUPNP
         stub_request(:get, '127.0.0.1:1234/root_description.xml').
           to_return :headers => {
             'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
-          }, :body => generate_xml_device_description(notify_options[:uuid])
+          }, :body => generate_device_description(notify_options[:uuid])
 
         EM.add_timer(2) do
           expect(cp.devices).to be_empty
@@ -118,7 +118,7 @@ module RUPNP
         stub_request(:get, '127.0.0.1:1234/root_description.xml').
           to_return :headers => {
             'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'
-          }, :body => generate_xml_device_description(notify_options[:uuid])
+          }, :body => generate_device_description(notify_options[:uuid])
 
         EM.add_timer(2) do
           expect(cp.devices).to be_empty

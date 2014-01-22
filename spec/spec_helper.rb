@@ -58,7 +58,7 @@ EOR
 end
 
 
-def generate_xml_device_description(uuid, options={})
+def generate_device_description(uuid, options={})
   opt = {
     :version_major => 1,
     :version_minor => 1,

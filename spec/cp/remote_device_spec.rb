@@ -54,7 +54,7 @@ module RUPNP
           em do
             stub_request(:get, location).
               to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.0 TEST/1.0'},
-                          :body => generate_xml_device_description(uuid))
+                          :body => generate_device_description(uuid))
             rd.errback { fail 'RemoteDevice#fetch should work' }
             rd.callback { done }
             rd.fetch
@@ -75,10 +75,10 @@ module RUPNP
         end
 
         it "should fail when description header is not a UPnP 1.x response" do
-          desc = generate_xml_device_description(uuid)
+          desc = generate_device_description(uuid)
           em do
             stub_request(:get, location).
-              to_return(:body => generate_xml_device_description(uuid),
+              to_return(:body => generate_device_description(uuid),
                         :headers => { 'SERVER' => 'Linux/1.2 Apache/1.0' },
                         :body => desc)
 
@@ -124,7 +124,7 @@ module RUPNP
           em do
             stub_request(:get, location).
               to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
-                          :body => generate_xml_device_description(uuid))
+                          :body => generate_device_description(uuid))
             rd.errback { fail 'RemoteDevice#fetch should work' }
             rd.callback do
               done
@@ -134,7 +134,7 @@ module RUPNP
         end
 
         it "should extract services if any" do
-          dev_desc = generate_xml_device_description(uuid, :device_type => 'MediaServer')
+          dev_desc = generate_device_description(uuid, :device_type => 'MediaServer')
           scpd = generate_scpd
           em do
             stub_request(:get, location).
@@ -155,7 +155,24 @@ module RUPNP
           end
         end
 
-        it "should not fail when a service cannot be extracted"
+        it "should not fail when a service cannot be extracted" do
+          dev_desc = generate_device_description(uuid, :device_type => 'MediaServer')
+          em do
+            stub_request(:get, location).
+              to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                        :body => dev_desc)
+            stub_request(:get, 'http://127.0.0.1:1234/cd/description.xml').
+              to_return(:status => 404)
+
+            rd.errback { |d, msg| fail msg }
+            rd.callback do
+              expect(rd.services).to have(0).item
+              done
+            end
+            rd.fetch
+          end
+        end
+
       end
 
       context "#update" do
@@ -163,7 +180,7 @@ module RUPNP
           em do
             stub_request(:get, location).
               to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
-                        :body => generate_xml_device_description(uuid))
+                        :body => generate_device_description(uuid))
             rd.errback { fail 'RemoteDevice#fetch should work' }
             rd.callback do
               not2 = notification.dup
@@ -185,7 +202,7 @@ module RUPNP
           em do
             stub_request(:get, location).
               to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0' },
-                        :body => generate_xml_device_description(uuid))
+                        :body => generate_device_description(uuid))
             rd.errback { fail 'RemoteDevice#fetch should work' }
             rd.callback do
               not2 = notification.merge('nextbootid.upnp.org' => 15)
@@ -201,7 +218,7 @@ module RUPNP
           em do
             stub_request(:get, location).
               to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0' },
-                        :body => generate_xml_device_description(uuid))
+                        :body => generate_device_description(uuid))
             rd.errback { fail 'RemoteDevice#fetch should work' }
             rd.callback do
               not2 = notification.merge('configid.upnp.org' => 47)
