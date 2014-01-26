@@ -36,11 +36,7 @@ module RUPNP
         resp[:status] = $2
         resp[:status_code] = $1
 
-        io.each_line do |line|
-          if line =~ /(\w+):\s*(.*)/
-            resp[$1.downcase.to_sym] = $2.chomp
-          end
-        end
+        resp.merge!(get_http_headers(io))
 
         @response << resp
       end
