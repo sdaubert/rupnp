@@ -2,7 +2,7 @@ require_relative '../spec_helper'
 module RUPNP
   module CP
 
-    describe RemoteDevice do
+    describe RemoteService do
       include EM::SpecHelper
 
       context '#fetch' do
