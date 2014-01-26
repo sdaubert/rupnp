@@ -147,6 +147,9 @@ module RUPNP
       expect(cp.find_device_by_udn(uuid2)).to eq(cp.devices[1])
       expect(cp.find_device_by_udn(uuid3)).to be_nil
     end
+
+    it '#start_event_server should only start server if not already running'
+    it '#stopt_event_server should stop event server'
   end
 
 end
