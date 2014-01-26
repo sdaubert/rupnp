@@ -212,8 +212,6 @@ EOR
         if @state_table.is_a? Hash
           @state_table = [@state_table]
         end
-        # ease debug print
-        @state_table.each { |s| s.each { |k, v| s[k] = v.to_s } }
       end
     end
 

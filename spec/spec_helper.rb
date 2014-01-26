@@ -100,6 +100,7 @@ def generate_scpd(options={})
   opt = {
     :version_major => 1,
     :version_minor => 1,
+    :nb_state_var => 1,
   }.merge(options)
 
   scpd=<<EOD
@@ -110,18 +111,21 @@ def generate_scpd(options={})
     <minor>#{opt[:version_minor]}</minor>
   </specVersion>
   <serviceStateTable>
+EOD
+  opt[:nb_state_var].times do |i|
+    scpd << <<EOSV
     <stateVariable sendEvents="no">
-      <name>X_variableName</name>
+      <name>X_variableName#{i+1}</name>
       <dataType>ui4</dataType>
-      <defaultValue>0</defaultValue>
+      <defaultValue>#{i}</defaultValue>
       <allowedValueRange>
         <minimum>0</minimum>
-        <maximum>63</maximum>
+        <maximum>#{64*(i+1) - 1}</maximum>
       </allowedValueRange>
     </stateVariable>
-  </serviceStateTable>
-</scpd>
-EOD
+EOSV
+  end
+  scpd << "  </serviceStateTable>\n</scpd>\n"
 end
 
 

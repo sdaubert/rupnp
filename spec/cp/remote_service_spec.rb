@@ -30,7 +30,26 @@ module RUPNP
           end
         end
 
-        it 'should set state table'
+        it 'should set state table' do
+          stub_request(:get, build_url(url_base, sd[:scpdurl])).
+            to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                      :body => generate_scpd(:nb_state_var => 4))
+          em do
+            rs.errback { fail 'RemoteDevice#fetch should work' }
+            rs.callback do
+              p rs.state_table
+              expect(rs.state_table).to have(4).items
+              expect(rs.state_table[0][:name]).to eq('X_variableName1')
+              expect(rs.state_table[1][:data_type]).to eq('ui4')
+              expect(rs.state_table[2][:default_value]).to eq('2')
+              expect(rs.state_table[3][:allowed_value_range][:maximum]).
+                to eq('255')
+              done
+            end
+            rs.fetch
+          end
+        end
+
         it 'should define actions as methods from description'
         it 'should fail when no SCPD URL is given'
         it 'should fail when SCPDURL is incorrect'
