@@ -2,47 +2,50 @@ require 'socket'
 require 'ipaddr'
 
 module RUPNP
+  module SSDP
 
-  # Base class for multicast connections (mainly SSDP search and listen)
-  # @abstract
-  class SSDP::MulticastConnection < EM::Connection
-    include LogMixin
+    # Base class for multicast connections (mainly SSDP search and listen)
+    # @abstract
+    class MulticastConnection < EM::Connection
+      include LogMixin
 
-    # @param [Integer] ttl
-    def initialize(ttl=nil)
-      @ttl = ttl || DEFAULT_TTL
-      setup_multicast_socket
-    end
+      # @param [Integer] ttl
+      def initialize(ttl=nil)
+        @ttl = ttl || DEFAULT_TTL
+        setup_multicast_socket
+      end
 
-    # Get peer info
-    # @return [Array] [port, hostname]
-    def peer_info
-      Socket.unpack_sockaddr_in(get_peername)
-    end
+      # Get peer info
+      # @return [Array] [port, hostname]
+      def peer_info
+        Socket.unpack_sockaddr_in(get_peername)
+      end
 
 
-    private
+      private
 
-    def setup_multicast_socket
-      set_membership IPAddr.new(MULTICAST_IP).hton + IPAddr.new('0.0.0.0').hton
-      set_ttl
-      set_reuse_addr
-    end
+      def setup_multicast_socket
+        set_membership(IPAddr.new(MULTICAST_IP).hton +
+                       IPAddr.new('0.0.0.0').hton)
+        set_ttl
+        set_reuse_addr
+      end
 
-    def set_membership(value)
-      set_sock_opt Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, value
-    end
+      def set_membership(value)
+        set_sock_opt Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, value
+      end
 
-    def set_ttl
-      value = [@ttl].pack('i')
-      set_sock_opt Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, value
-      set_sock_opt Socket::IPPROTO_IP, Socket::IP_TTL, value
-    end
+      def set_ttl
+        value = [@ttl].pack('i')
+        set_sock_opt Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, value
+        set_sock_opt Socket::IPPROTO_IP, Socket::IP_TTL, value
+      end
 
-    def set_reuse_addr
-      set_sock_opt Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true
+      def set_reuse_addr
+        set_sock_opt Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true
+      end
+
     end
 
   end
-
 end

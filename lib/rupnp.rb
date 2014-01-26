@@ -49,6 +49,7 @@ end
 
 require_relative 'rupnp/constants'
 require_relative 'rupnp/tools'
+require_relative 'rupnp/http'
 require_relative 'rupnp/log_mixin'
 require_relative 'rupnp/event'
 require_relative 'rupnp/control_point'

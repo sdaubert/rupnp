@@ -4,7 +4,7 @@ module RUPNP
   # Searcher class for searching devices
   # @author Sylvain Daubert
   class SSDP::Searcher < SSDP::MulticastConnection
-    include SSDP::HTTP
+    include HTTP
 
     # Number of SEARCH datagrams to send
     DEFAULT_M_SEARCH_TRY = 2

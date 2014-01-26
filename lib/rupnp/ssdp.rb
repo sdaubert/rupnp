@@ -1,4 +1,3 @@
-require_relative 'ssdp/http'
 require_relative 'ssdp/multicast_connection'
 require_relative 'ssdp/searcher'
 require_relative 'ssdp/listener'

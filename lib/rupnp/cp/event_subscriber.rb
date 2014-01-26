@@ -31,17 +31,19 @@ module RUPNP
       io = StringIO.new(data)
 
       status = io.readline
-      status =~ /HTTP\/1\.1 (\d+) (.+)/
-      resp[:status] = $2
-      resp[:status_code] = $1
 
-      io.each_line do |line|
-        if line =~ /(\w+):\s*(.*)/
-          resp[$1.downcase.to_sym] = $2.chomp
+      if status =~ /HTTP\/1\.1 (\d+) (.+)/
+        resp[:status] = $2
+        resp[:status_code] = $1
+
+        io.each_line do |line|
+          if line =~ /(\w+):\s*(.*)/
+            resp[$1.downcase.to_sym] = $2.chomp
+          end
         end
-      end
 
-      @response << resp
+        @response << resp
+      end
     end
 
   end

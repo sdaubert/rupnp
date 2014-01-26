@@ -4,7 +4,7 @@ module RUPNP
   # Searcher class for searching devices
   # @author Sylvain Daubert
   class SSDP::Notifier < SSDP::MulticastConnection
-    include SSDP::HTTP
+    include HTTP
 
     # Number of SEARCH datagrams to send
     DEFAULT_NOTIFY_TRY = 2

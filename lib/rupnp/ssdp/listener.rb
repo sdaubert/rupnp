@@ -3,7 +3,7 @@ module RUPNP
   # Listener class for listening for devices' notifications
   # @author Sylvain Daubert
   class SSDP::Listener < SSDP::MulticastConnection
-    include SSDP::HTTP
+    include HTTP
 
     # Channel to receive notifications
     # @return [EM::Channel]

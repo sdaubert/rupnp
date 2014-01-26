@@ -3,7 +3,7 @@ module RUPNP
   # M-SEARCH responder for M-SEARCH multicast requests from control points.
   # @author Sylvain Daubert
   module SSDP::SearchResponder
-    include SSDP::HTTP
+    include HTTP
 
     def receive_data(data)
       port, ip = peer_info
