@@ -28,7 +28,7 @@ module RUPNP
   # a +#action_name+ method is created. This method requires a hash with
   # an element named +argument_name_in+.
   # If no <i>in</i> argument is required, an empty hash (<code>{}</code>)
-  # must be passed to the method.
+  # must be passed to the method. Hash keys may not be symbols.
   #
   # A Hash is returned, with a key for each <i>out</i> argument.
   #
@@ -219,6 +219,7 @@ EOR
       if scpd[:scpd][:action_list] and scpd[:scpd][:action_list][:action]
         log :info, "extract actions for service #@type"
         @actions = scpd[:scpd][:action_list][:action]
+        @actions = [@actions] unless @actions.is_a? Array
         @actions.each do |action|
           action[:arguments] = action[:argument_list][:argument]
           action.delete :argument_list
@@ -231,16 +232,17 @@ EOR
       action[:name] = action[:name].to_s
       action_name = action[:name]
       name = snake_case(action_name).to_sym
+
       define_singleton_method(name) do |params|
+        if params
+          unless params.is_a? Hash
+            raise ArgumentError, 'only hash arguments are accepted'
+          end
+        end
         response = @soap.call(action_name) do |locals|
           locals.attributes 'xmlns:u' => @type
           locals.soap_action "#{type}##{action_name}"
-          if params
-            unless params.is_a? Hash
-              raise ArgumentError, 'only hash arguments are accepted'
-            end
-            locals.message params
-          end
+          locals.message params
         end
 
         if action[:arguments].is_a? Hash
@@ -250,11 +252,12 @@ EOR
           end
         else
           log :debug, 'true argument list'
-          action[:arguments].map do |arg|
-            if params arg[:direction] == 'out'
-              process_soap_response name, response, arg
-            end
+          hsh = {}
+          outer = action[:arguments].select { |arg| arg[:direction] == 'out' }
+          outer.each do |arg|
+            hsh.merge! process_soap_response(name, response, arg)
           end
+          hsh
         end
       end
     end

@@ -101,6 +101,8 @@ def generate_scpd(options={})
     :version_major => 1,
     :version_minor => 1,
     :nb_state_var => 1,
+    :define_action => false,
+    :send_event => false
   }.merge(options)
 
   scpd=<<EOD
@@ -110,11 +112,35 @@ def generate_scpd(options={})
     <major>#{opt[:version_major]}</major>
     <minor>#{opt[:version_minor]}</minor>
   </specVersion>
-  <serviceStateTable>
 EOD
+
+  if opt[:define_action]
+    scpd << <<EOAL
+  <actionList>
+    <action>
+      <name>testAction</name>
+      <argumentList>
+        <argument>
+          <name>var1</name>
+          <direction>in</direction>
+          <relatedStateVariable>X_variableName1</relatedStateVariable>
+        </argument>
+        <argument>
+          <name>var2</name>
+          <direction>out</direction>
+          <retval/>
+          <relatedStateVariable>X_variableName2</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
+  </actionList>
+EOAL
+  end
+
+  scpd << '  <serviceStateTable>'
   opt[:nb_state_var].times do |i|
     scpd << <<EOSV
-    <stateVariable sendEvents="no">
+    <stateVariable sendEvents="#{opt[:send_event] ? 'yes' : 'no'}">
       <name>X_variableName#{i+1}</name>
       <dataType>ui4</dataType>
       <defaultValue>#{i}</defaultValue>
@@ -126,6 +152,26 @@ EOD
 EOSV
   end
   scpd << "  </serviceStateTable>\n</scpd>\n"
+end
+
+
+def action_response(hash)
+  r = <<EOD
+<?xml version="1.0"?>
+<s:Envelope
+ xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+ s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body>
+    <u:testActionResponse xmlns:u="urn:schemas-upnp-org:service:service:1">
+EOD
+
+  hash.each { |k, v| r << "      <#{k}>#{v}</#{k}>\n"}
+
+  r << <<EOD
+    </u:testActionResponse>
+  </s:Body>
+</s:Envelope>
+EOD
 end
 
 
