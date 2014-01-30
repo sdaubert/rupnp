@@ -111,23 +111,14 @@ module RUPNP
     # Get service from its description
     # @return [void]
     def fetch
-      if @scpd_url.empty?
-        fail 'no SCPD URL'
-        return
-      end
-
       scpd_getter = EM::DefaultDeferrable.new
 
       scpd_getter.errback do
         fail "cannot get SCPD from #@scpd_url"
+        next
       end
 
       scpd_getter.callback do |scpd|
-        if !scpd or scpd.empty?
-          fail "SCPD from #@scpd_url is empty"
-          next
-        end
-
         if bad_description?(scpd)
           fail 'not a UPNP 1.0/1.1 SCPD'
           next

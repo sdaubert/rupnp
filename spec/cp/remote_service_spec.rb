@@ -22,7 +22,7 @@ module RUPNP
             to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
                       :body => generate_scpd)
           em do
-            rs.errback { fail 'RemoteDevice#fetch should work' }
+            rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
               done
             end
@@ -35,7 +35,7 @@ module RUPNP
             to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
                       :body => generate_scpd(:nb_state_var => 4))
           em do
-            rs.errback { fail 'RemoteDevice#fetch should work' }
+            rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
               expect(rs.state_table).to have(4).items
               expect(rs.state_table[0][:name]).to eq('X_variableName1')
@@ -58,7 +58,7 @@ module RUPNP
             to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
                       :body => action_response(var2: 1))
           em do
-            rs.errback { fail 'RemoteDevice#fetch should work' }
+            rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
               expect(rs).to respond_to(:test_action)
               res = rs.test_action('var1' => 10)
@@ -69,10 +69,48 @@ module RUPNP
           end
         end
 
-        it 'should fail when no SCPD URL is given'
-        it 'should fail when SCPDURL is incorrect'
-        it 'should fail when SCPDURL is incorrect is empty'
-        it "should fail when SCPD does not conform to UPnP spec"
+        it 'should fail when SCPDURL is unreachable' do
+          stub_request(:get, build_url(url_base, sd[:scpdurl])).to_timeout
+
+          em do
+            rs.errback  do |msg|
+              expect(msg).to match(/cannot get SCPD/)
+              done
+            end
+            rs.callback { fail 'RemoteService#fetch should not work' }
+            rs.fetch
+          end
+        end
+
+        it 'should fail when SCPDURL does not return a SCPD' do
+          stub_request(:get, build_url(url_base, sd[:scpdurl])).
+            to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                      :body => 'This is only text!')
+
+          em do
+            rs.errback do |msg|
+              expect(msg).to match(/not a UPNP .* SCPD/)
+              done
+            end
+            rs.callback { fail 'RemoteService#fetch should not work' }
+            rs.fetch
+          end
+        end
+
+        it "should fail when SCPD does not conform to UPnP spec" do
+          stub_request(:get, build_url(url_base, sd[:scpdurl])).
+            to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                      :body => generate_scpd(:version_major => 2))
+
+          em do
+            rs.errback do |msg|
+              expect(msg).to match(/not a UPNP .* SCPD/)
+              done
+            end
+            rs.callback { fail 'RemoteService#fetch should not work' }
+            rs.fetch
+          end
+        end
       end
 
       context '#subscribe_to_event' do
