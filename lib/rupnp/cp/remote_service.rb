@@ -160,9 +160,6 @@ EOR
 
       server = uri.host
       port = (uri.port || 80).to_i
-      ap @event_sub_url
-      ap server
-      ap port
       con = EM.connect(server, port, CP::EventSubscriber, subscribe_req)
 
       con.response.subscribe do |resp|

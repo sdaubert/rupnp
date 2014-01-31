@@ -114,7 +114,27 @@ module RUPNP
       end
 
       context '#subscribe_to_event' do
-        it 'should start event server'
+
+        before(:each) do
+          stub_request(:get, build_url(url_base, sd[:scpdurl])).
+            to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
+                      :body => generate_scpd)
+          rs.device.stub(:control_point => ControlPoint.new(:root))
+        end
+
+        it 'should start event server' do
+          em do
+            rs.errback { fail 'RemoteService#fetch should work' }
+            rs.callback do
+              expect(rs.device.control_point.event_port).to be_nil
+              rs.subscribe_to_event
+              expect(rs.device.control_point.event_port).to be_a(Integer)
+              done
+            end
+            rs.fetch
+          end
+        end
+
         it 'should subscribe to an event'
         it 'should not fail if subscribtion is not possible'
       end
