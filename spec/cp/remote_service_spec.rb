@@ -119,7 +119,8 @@ module RUPNP
           stub_request(:get, build_url(url_base, sd[:scpdurl])).
             to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
                       :body => generate_scpd)
-          stub_request(:subscribe, build_url(url_base, sd[:event_sub_url])).
+          @webstub = stub_request(:subscribe,
+                                  build_url(url_base, sd[:event_sub_url])).
             with(:headers => { 'NT' => 'upnp:event'}).
             to_return(:headers => {
                         'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0',
@@ -158,7 +159,36 @@ module RUPNP
           end
         end
 
-        it 'should not fail if subscribtion is not possible'
+        it 'should not fail if subscribtion is not possible' do
+          rd_io, wr_io = IO.pipe
+          begin
+            RUPNP.logdev = wr_io
+            RUPNP.log_level = :warn
+
+            remove_request_stub(@webstub)
+            stub_request(:subscribe, build_url(url_base, sd[:event_sub_url])).
+              with(:headers => { 'NT' => 'upnp:event'}).
+              to_timeout.then.
+              to_return(:status => 404)
+
+            em do
+              rs.errback { fail 'RemoteService#fetch should work' }
+              rs.callback do
+                expect { rs.subscribe_to_event { fail } }.to_not raise_error
+                expect { rs.subscribe_to_event { fail } }.to_not raise_error
+                EM.add_timer(1) do
+                  expect(rd_io.readline).to match(/timeout/)
+                  expect(rd_io.readline).to match(/Not Found/)
+                  done
+                end
+              end
+              rs.fetch
+            end
+          ensure
+            rd_io.close
+            wr_io.close
+          end
+        end
       end
 
     end

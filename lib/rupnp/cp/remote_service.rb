@@ -160,8 +160,8 @@ module RUPNP
                                  'NT' => 'upnp:event',
                                  'TIMEOUT' => "Second-#{options[:timeout]}"})
 
-      http.errback do |error|
-        log :warn, "Cannot subscibe to event: #{error}"
+      http.errback do |client|
+        log :warn, "Cannot subscribe to event: #{client.error}"
       end
 
       http.callback do
@@ -169,7 +169,7 @@ module RUPNP
         con.close
         if http.response_header.status != 200
           log :warn, "Cannot subscribe to event #@event_sub_url:" +
-            " #{http.response_header.http_status}"
+            " #{http.response_header.http_reason}"
         else
           timeout = http.response_header['TIMEOUT'].match(/(\d+)/)[1] || 1800
           event = Event.new(@event_sub_url, @callback_url,
