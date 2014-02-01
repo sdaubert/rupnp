@@ -48,6 +48,7 @@ module RUPNP
       @devices = []
       @new_device_channel = EM::Channel.new
       @bye_device_channel = EM::Channel.new
+      @add_event_url = EM::Channel.new
     end
 
     # Start control point.
@@ -78,7 +79,6 @@ module RUPNP
     # @return [void]
     def start_event_server(port=EVENT_SUB_DEFAULT_PORT)
       @event_port ||= port
-      @add_event_url ||= EM::Channel.new
       @event_server ||= EM.start_server('0.0.0.0', port, CP::EventServer,
                                         @add_event_url)
     end

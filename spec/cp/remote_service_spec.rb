@@ -12,7 +12,7 @@ module RUPNP
           :service_id => 'urn:upnp-org:serviceId:Service',
           :scpdurl => '/service/description.xml',
           :control_url => '/service/control',
-          :event_url => '/service/event' } }
+          :event_sub_url => '/service/event' } }
       let(:rs){ RemoteService.new(double('rdevice'), url_base, sd)}
 
       context '#fetch' do
@@ -119,6 +119,13 @@ module RUPNP
           stub_request(:get, build_url(url_base, sd[:scpdurl])).
             to_return(:headers => { 'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0'},
                       :body => generate_scpd)
+          stub_request(:subscribe, build_url(url_base, sd[:event_sub_url])).
+            with(:headers => { 'NT' => 'upnp:event'}).
+            to_return(:headers => {
+                        'SERVER' => 'OS/1.0 UPnP/1.1 TEST/1.0',
+                        'SID' => "uuid:#{UUID.generate}",
+                        'CONTENT-LENGTH' => 0,
+                        'TIMEOUT' => 'Second-1800'})
           rs.device.stub(:control_point => ControlPoint.new(:root))
         end
 
@@ -127,7 +134,7 @@ module RUPNP
             rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
               expect(rs.device.control_point.event_port).to be_nil
-              rs.subscribe_to_event
+              rs.subscribe_to_event {}
               expect(rs.device.control_point.event_port).to be_a(Integer)
               done
             end
@@ -135,7 +142,22 @@ module RUPNP
           end
         end
 
-        it 'should subscribe to an event'
+        it 'should subscribe to an event' do
+          em do
+            rs.errback { fail 'RemoteService#fetch should work' }
+            rs.callback do
+              rs.subscribe_to_event do |msg|
+                done
+              end
+            end
+            rs.fetch
+
+            rs.device.control_point.add_event_url.subscribe do |url, event|
+              EM.add_timer(0) { event << 'message' }
+            end
+          end
+        end
+
         it 'should not fail if subscribtion is not possible'
       end
 

@@ -137,6 +137,8 @@ module RUPNP
     # @param [Hash] options
     # @option options [Integer] timeout
     # @yieldparam [Event] event event received
+    # @yieldparam [Object] msg message received
+    # @return [Integer] subscribe id. May be used to unsubscribe on event
     def subscribe_to_event(options={}, &blk)
       cp = device.control_point
 
@@ -148,30 +150,33 @@ module RUPNP
 
       uri = URI(@event_sub_url)
       options[:timeout] ||= EVENT_SUB_DEFAULT_TIMEOUT
-      subscribe_req = <<EOR
-SUSCRIBE #{uri.path} HTTP/1.1\r
-HOST: #{HOST_IP}:#{port}\r
-USER-AGENT: #{RUPNP::USER_AGENT}\r
-CALLBACK: #@callback_url\r
-NT: upnp:event
-TIMEOUT: Second-#{options[:timeout]}\r
-\r
-EOR
 
-      server = uri.host
-      port = (uri.port || 80).to_i
-      con = EM.connect(server, port, CP::EventSubscriber, subscribe_req)
+      log :info, "send SUBSCRIBE request to #{uri}"
+      con = EM::HttpRequest.new(@event_sub_url)
+      http = con.setup_request(:subscribe, :head => {
+                                 'HOST' => "#{uri.host}:#{uri.port}",
+                                 'USER-AGENT' => RUPNP::USER_AGENT,
+                                 'CALLBACK' => @callback_url,
+                                 'NT' => 'upnp:event',
+                                 'TIMEOUT' => "Second-#{options[:timeout]}"})
 
-      con.response.subscribe do |resp|
-        if resp[:status_code] != 200
-          log :warn, "Cannot subscribe to event #@event_sub_url: #{resp[:status]}"
+      http.errback do |error|
+        log :warn, "Cannot subscibe to event: #{error}"
+      end
+
+      http.callback do
+        log :debug, 'Close connection to subscribe event URL'
+        con.close
+        if http.response_header.status != 200
+          log :warn, "Cannot subscribe to event #@event_sub_url:" +
+            " #{http.response_header.http_status}"
         else
-          event = Event.new(resp[:sid], resp[:timeout].match(/(\d+)/)[1].to_i)
+          timeout = http.response_header['TIMEOUT'].match(/(\d+)/)[1] || 1800
+          event = Event.new(@event_sub_url, @callback_url,
+                            http.response_header['SID'], timeout.to_i)
           cp.add_event_url << ["/event#{num}", event]
-          event.subscribe(event, blk)
+          event.subscribe &blk
         end
-        log :info, 'Close connection to subscribe event URL'
-        con.close_connection
       end
     end
 

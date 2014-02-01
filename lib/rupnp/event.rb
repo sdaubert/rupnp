@@ -9,9 +9,13 @@ module RUPNP
     # @return [Integer]
     attr_reader :sid
 
+    # @param [String] event_suburl Event subscription URL
+    # @param [String] callback_url Callback URL to receive events
     # @param [#to_i] sid
     # @param [Integer] timeout for event (in seconds)
-    def initialize(sid, timeout)
+    def initialize(event_suburl, callback_url, sid, timeout)
+      super()
+      @event_suburl = event_suburl
       @sid, @timeout = sid, timeout
 
       @timeout_timer = EM.add_timer(@timeout) { self << :timeout }
