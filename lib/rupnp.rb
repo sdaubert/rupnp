@@ -57,7 +57,6 @@ require_relative 'rupnp/cp/base'
 require_relative 'rupnp/cp/remote_service'
 require_relative 'rupnp/cp/remote_device'
 require_relative 'rupnp/cp/event_server'
-require_relative 'rupnp/cp/event_subscriber'
 require_relative 'rupnp/ssdp'
 
 require_relative 'rupnp/device'

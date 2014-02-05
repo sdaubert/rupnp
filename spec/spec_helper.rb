@@ -10,6 +10,7 @@ require 'webmock/rspec'
 
 RUPNP.log_level = :failure
 
+WebMock.disable_net_connect!(allow_localhost: true)
 
 class FakeMulticast < RUPNP::SSDP::MulticastConnection
   attr_reader :handshake_response, :packets
@@ -172,6 +173,31 @@ EOD
   </s:Body>
 </s:Envelope>
 EOD
+end
+
+
+def event_body
+  <<EOD
+<?xml version="1.0"?>
+<e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
+<e:property>
+<variableName>12</variableName>
+</e:property>
+</e:propertyset>
+EOD
+end
+
+
+def send_notify_request(req)
+  req.setup_request(:notify, :head => {
+                      'HOST' => "127.0.0.1:1234",
+                      'USER-AGENT' => RUPNP::USER_AGENT,
+                      'CONTENT-TYPE' => 'text/xml; charset="utf-8"',
+                      'NT' => 'upnp:event',
+                      'NTS' => 'upnp:propchange',
+                      'SID' => "uuid:#{UUID.generate}",
+                      'SEQ' => 0},
+                    :body => event_body)
 end
 
 
