@@ -188,16 +188,19 @@ EOD
 end
 
 
-def send_notify_request(req)
-  req.setup_request(:notify, :head => {
-                      'HOST' => "127.0.0.1:1234",
-                      'USER-AGENT' => RUPNP::USER_AGENT,
-                      'CONTENT-TYPE' => 'text/xml; charset="utf-8"',
-                      'NT' => 'upnp:event',
-                      'NTS' => 'upnp:propchange',
-                      'SID' => "uuid:#{UUID.generate}",
-                      'SEQ' => 0},
-                    :body => event_body)
+def send_notify_request(req, options={})
+  delete = options.delete(:delete)
+  headers = {
+    'HOST' => "127.0.0.1:1234",
+    'USER-AGENT' => RUPNP::USER_AGENT,
+    'CONTENT-TYPE' => 'text/xml; charset="utf-8"',
+    'NT' => 'upnp:event',
+    'NTS' => 'upnp:propchange',
+    'SID' => "uuid:#{UUID.generate}",
+    'SEQ' => 0 }.merge(options)
+  headers.delete delete if delete
+
+  req.setup_request(:notify, :head => headers, :body => event_body)
 end
 
 
