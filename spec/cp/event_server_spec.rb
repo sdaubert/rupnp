@@ -65,7 +65,54 @@ module RUPNP
         end
       end
 
-      it 'should return 412 error on bad request'
+      it 'should return 412 error on bad request' do
+        em do
+          EventServer.add_event_url [event_uri, event]
+          start_server
+          http = send_notify_request(req, 'SID' => "uuid:#{UUID.generate}")
+          http.errback { fail 'must not fail!' }
+          http.callback do
+            expect(http.response_header.status).to eq(412)
+            done
+          end
+        end
+
+        em do
+          EventServer.add_event_url [event_uri, event]
+          start_server
+          http = send_notify_request(req, 'NT' => "upnp:other")
+          http.errback { fail 'must not fail!' }
+          http.callback do
+            expect(http.response_header.status).to eq(412)
+            done
+          end
+        end
+
+
+        em do
+          EventServer.add_event_url [event_uri, event]
+          start_server
+          http = send_notify_request(req, 'NTS' => "upnp:other")
+          http.errback { fail 'must not fail!' }
+          http.callback do
+            expect(http.response_header.status).to eq(412)
+            done
+          end
+        end
+
+
+        em do
+          EventServer.add_event_url [event_uri, event]
+          start_server
+          http = send_notify_request(req, :delete => 'SID')
+          http.errback { fail 'must not fail!' }
+          http.callback do
+            expect(http.response_header.status).to eq(412)
+            done
+          end
+        end
+      end
+
       it "should return updated variables through 'events' channel"
       it 'should serve multiple URLs'
     end

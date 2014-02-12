@@ -144,6 +144,8 @@ module RUPNP
         end
 
         it 'should subscribe to an event' do
+          pending
+          RUPNP.log_level = :debug
           em do
             rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
@@ -153,8 +155,9 @@ module RUPNP
             end
             rs.fetch
 
-            rs.device.control_point.add_event_url.subscribe do |url, event|
-              EM.add_timer(0) { event << 'message' }
+            EM.add_timer(0) do
+              conn = EM::HttpRequest.new('http://127.0.0.1:8080/event/1')
+              send_notify_request(conn)
             end
           end
         end

@@ -24,10 +24,6 @@ module RUPNP
     # Get event listening port
     # @return [Integer]
     attr_reader :event_port
-    # Return channel to add event URL (URL to listen for a specific
-    # event)
-    # @return [EM::Channel]
-    attr_reader :add_event_url
     # Return remote devices controlled by this control point
     # @return [Array<CP::RemoteDevice>]
     attr_reader :devices
@@ -48,7 +44,6 @@ module RUPNP
       @devices = []
       @new_device_channel = EM::Channel.new
       @bye_device_channel = EM::Channel.new
-      @add_event_url = EM::Channel.new
     end
 
     # Start control point.
@@ -79,8 +74,7 @@ module RUPNP
     # @return [void]
     def start_event_server(port=EVENT_SUB_DEFAULT_PORT)
       @event_port ||= port
-      @event_server ||= EM.start_server('0.0.0.0', port, CP::EventServer,
-                                        @add_event_url)
+      @event_server ||= EM.start_server('0.0.0.0', port, CP::EventServer)
     end
 
     # Stop event server
