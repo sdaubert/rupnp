@@ -70,10 +70,27 @@ module RUPNP
         return
       end
 
-      if @http[:nt] != 'upnp:event' or @http[:nts] != 'upnp:propchange'
+      if !@http.has_key?(:nt) or !@http.has_key?(:nts)
         log :warn, 'EventServer: malformed NOTIFY event message'
         log :debug, "#@http_headers\n#@http_content"
         response.status = 400
+        response.send_response
+        return
+      end
+
+      if @http[:nt] != 'upnp:event' or @http[:nts] != 'upnp:propchange' or
+          !@http.has_key?(:sid) or @http[:sid] == ''
+        log :warn, 'EventServer: precondition failed'
+        log :debug, "#@http_headers\n#@http_content"
+        response.status = 412
+        response.send_response
+        return
+      end
+
+      if event.sid != @http[:sid]
+        log :warn, 'EventServer: precondition failed (unknown SID)'
+        log :debug, "#@http_headers\n#@http_content"
+        response.status = 412
         response.send_response
         return
       end

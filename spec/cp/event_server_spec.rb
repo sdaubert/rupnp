@@ -100,7 +100,6 @@ module RUPNP
           end
         end
 
-
         em do
           EventServer.add_event_url [event_uri, event]
           start_server
