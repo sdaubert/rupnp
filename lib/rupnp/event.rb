@@ -24,11 +24,13 @@ module RUPNP
     end
 
     # Renew subscription to event
+    # @todo
     def renew_subscription
       raise NotImplementedError
     end
 
     # Cancel subscription to event
+    # @todo
     def cancel_subscription
       raise NotImplementedError
     end
