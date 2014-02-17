@@ -8,20 +8,22 @@ module RUPNP
     include LogMixin
 
     # @private
-    @@add_url = EM::Channel.new
+    @@add_event = EM::Channel.new
     # @private
-    @@urls = []
+    @@events = []
 
-    @@add_url.subscribe do |url|
-      @@urls << url
+    @@add_event.subscribe do |url|
+      puts 'subscribe'
+      @@events << url
     end
 
     class << self
       # Channel to add url for listening to
       # @param [Object] url
       # @return [void]
-      def add_event_url(url)
-        @@add_url << url
+      def add_event(event)
+        puts 'add_event'
+        @@add_event << event
       end
     end
 
@@ -54,9 +56,10 @@ module RUPNP
         return
       end
 
-      url, event = @@urls.find { |a| a[0] == @http_request_uri }
+      event = @@events.find { |e| e.callback_url == @http_request_uri }
+      p @@events
 
-      if url.nil?
+      if event.nil?
         log :info, "EventServer: Requested URI #@http_request_uri unknown"
         response.status = 404
         response.send_response
@@ -95,11 +98,12 @@ module RUPNP
         return
       end
 
+      seq = @http[:seq].is_nil? ? 0 : @http[:seq].to_i
       event << {
-        :sid => @http[:sid],
-        :seq => @http[:seq],
-        :content => @http_content }
+        :seq => seq,
+        :content => Nori.new.parse(@http_content) }
 
+      response_status = 200
       response.send_response
     end
 

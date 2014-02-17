@@ -14,12 +14,28 @@ module RUPNP
 
       let(:timeout) { 2 }
       let(:sid) { "uuid:#{UUID.generate}" }
-      let(:event) { Event.new('', '', sid, timeout) }
       let(:event_uri) { '/event/1' }
+      let(:event) { Event.new('', event_uri, sid, timeout) }
       let(:port) { RUPNP::EVENT_SUB_DEFAULT_PORT }
       let(:req) {EM::HttpRequest.new("http://127.0.0.1:#{port}#{event_uri}")}
 
-      it 'should receive a NOTIFY request'
+      it 'should receive a NOTIFY request' do
+        em do
+          EventServer.add_event event
+          start_server
+          EM.add_timer(1) do
+          http = send_notify_request(req)
+          http.errback { fail 'must not fail!' }
+          http.callback do
+            expect(http.response_header.status).to eq(200)
+            rep = event.pop
+            expect(rep[:seq]).to be_a(Integer)
+            expect(rep[:content]).to be_a(Hash)
+            done
+          end
+            end
+        end
+      end
 
       it 'should return 404 error on bad HTTP method URI' do
         em do
@@ -27,6 +43,7 @@ module RUPNP
 
           req = EM::HttpRequest.new("http://127.0.0.1:#{port}/unknown")
           http = send_notify_request(req)
+          http.errback { fail 'must not fail!' }
           http.callback do
             expect(http.response_header.status).to eq(404)
             done
@@ -49,7 +66,7 @@ module RUPNP
       it 'should return 400 error on malformed request' do
         em do
           req2 = req.dup
-          EventServer.add_event_url [event_uri, event]
+          EventServer.add_event event
           start_server
 
           http = send_notify_request(req, :delete => 'NT')
@@ -67,7 +84,7 @@ module RUPNP
 
       it 'should return 412 error on bad request' do
         em do
-          EventServer.add_event_url [event_uri, event]
+          EventServer.add_event event
           start_server
           http = send_notify_request(req, 'SID' => "uuid:#{UUID.generate}")
           http.errback { fail 'must not fail!' }
@@ -78,7 +95,7 @@ module RUPNP
         end
 
         em do
-          EventServer.add_event_url [event_uri, event]
+          EventServer.add_event event
           start_server
           http = send_notify_request(req, 'NT' => "upnp:other")
           http.errback { fail 'must not fail!' }
@@ -90,7 +107,7 @@ module RUPNP
 
 
         em do
-          EventServer.add_event_url [event_uri, event]
+          EventServer.add_event event
           start_server
           http = send_notify_request(req, 'NTS' => "upnp:other")
           http.errback { fail 'must not fail!' }
@@ -101,7 +118,7 @@ module RUPNP
         end
 
         em do
-          EventServer.add_event_url [event_uri, event]
+          EventServer.add_event event
           start_server
           http = send_notify_request(req, :delete => 'SID')
           http.errback { fail 'must not fail!' }
