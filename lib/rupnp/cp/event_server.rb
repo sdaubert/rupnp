@@ -13,17 +13,22 @@ module RUPNP
     @@events = []
 
     @@add_event.subscribe do |url|
-      puts 'subscribe'
       @@events << url
     end
 
     class << self
       # Channel to add url for listening to
-      # @param [Object] url
+      # @param [Event] event
       # @return [void]
       def add_event(event)
-        puts 'add_event'
         @@add_event << event
+      end
+
+      # Remove an event
+      # @param [Event] event
+      # @return [void]
+      def remove_event(event)
+        @@events.delete_if { |e| e == event }
       end
     end
 
@@ -39,15 +44,6 @@ module RUPNP
 
       response = EM::DelegatedHttpResponse.new(self)
 
-#      p  @http_request_method
-#      p  @http_request_uri
-#      p  @http_query_string
-#      p  @http_protocol
-#      p  @http_content
-#      p  @http[:cookie]
-#      p  @http[:content_type]
-#      p  @http.inspect
-
       if @http_request_method != 'NOTIFY'
         log :info, "EventServer: method #@http_request_method not allowed"
         response.status = 405
@@ -57,7 +53,6 @@ module RUPNP
       end
 
       event = @@events.find { |e| e.callback_url == @http_request_uri }
-      p @@events
 
       if event.nil?
         log :info, "EventServer: Requested URI #@http_request_uri unknown"
@@ -98,7 +93,7 @@ module RUPNP
         return
       end
 
-      seq = @http[:seq].is_nil? ? 0 : @http[:seq].to_i
+      seq = @http[:seq].nil? ? 0 : @http[:seq].to_i
       event << {
         :seq => seq,
         :content => Nori.new.parse(@http_content) }

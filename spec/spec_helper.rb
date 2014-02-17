@@ -180,9 +180,9 @@ def event_body
   <<EOD
 <?xml version="1.0"?>
 <e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
-<e:property>
-<variableName>12</variableName>
-</e:property>
+  <e:property>
+    <variableName>12</variableName>
+  </e:property>
 </e:propertyset>
 EOD
 end

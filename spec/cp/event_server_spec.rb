@@ -19,24 +19,6 @@ module RUPNP
       let(:port) { RUPNP::EVENT_SUB_DEFAULT_PORT }
       let(:req) {EM::HttpRequest.new("http://127.0.0.1:#{port}#{event_uri}")}
 
-      it 'should receive a NOTIFY request' do
-        em do
-          EventServer.add_event event
-          start_server
-          EM.add_timer(1) do
-          http = send_notify_request(req)
-          http.errback { fail 'must not fail!' }
-          http.callback do
-            expect(http.response_header.status).to eq(200)
-            rep = event.pop
-            expect(rep[:seq]).to be_a(Integer)
-            expect(rep[:content]).to be_a(Hash)
-            done
-          end
-            end
-        end
-      end
-
       it 'should return 404 error on bad HTTP method URI' do
         em do
           start_server
@@ -80,6 +62,7 @@ module RUPNP
             end
           end
         end
+        EventServer.remove_event event
       end
 
       it 'should return 412 error on bad request' do
@@ -95,7 +78,6 @@ module RUPNP
         end
 
         em do
-          EventServer.add_event event
           start_server
           http = send_notify_request(req, 'NT' => "upnp:other")
           http.errback { fail 'must not fail!' }
@@ -107,7 +89,6 @@ module RUPNP
 
 
         em do
-          EventServer.add_event event
           start_server
           http = send_notify_request(req, 'NTS' => "upnp:other")
           http.errback { fail 'must not fail!' }
@@ -118,7 +99,6 @@ module RUPNP
         end
 
         em do
-          EventServer.add_event event
           start_server
           http = send_notify_request(req, :delete => 'SID')
           http.errback { fail 'must not fail!' }
@@ -127,6 +107,29 @@ module RUPNP
             done
           end
         end
+        EventServer.remove_event event
+      end
+
+      it 'should receive a NOTIFY request' do
+        em do
+          EventServer.add_event event
+          start_server
+          http = send_notify_request(req, 'SID' => sid)
+          http.errback { fail 'must not fail!' }
+          http_ok = event_ok = false
+          http.callback do
+            expect(http.response_header.status).to eq(200)
+            http_ok = true
+            done if event_ok
+          end
+          event.subscribe do |h|
+            expect(h[:seq]).to be_a(Integer)
+            expect(h[:content]).to be_a(Hash)
+            event_ok = true
+            done if http_ok
+          end
+        end
+        EventServer.remove_event event
       end
 
       it "should return updated variables through 'events' channel"
