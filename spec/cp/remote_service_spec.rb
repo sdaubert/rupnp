@@ -37,12 +37,14 @@ module RUPNP
           em do
             rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
-              expect(rs.state_table).to have(4).items
+              expect(rs.state_table).to have(5).items
               expect(rs.state_table[0][:name]).to eq('X_variableName1')
               expect(rs.state_table[1][:data_type]).to eq('ui4')
               expect(rs.state_table[2][:default_value]).to eq('2')
               expect(rs.state_table[3][:allowed_value_range][:maximum]).
                 to eq('255')
+              expect(rs.state_table[4][:data_type]).to eq('string')
+              expect(rs.state_table[4][:default_value]).to eq('none')
 
               expect(rs.variables['X_variableName1']).to be_a(Fixnum)
               4.times do |i|

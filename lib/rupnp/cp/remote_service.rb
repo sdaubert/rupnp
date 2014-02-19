@@ -90,6 +90,9 @@ module RUPNP
       # State table for the service
       # @return [Array<Hash>]
       attr_reader :state_table
+      # Variables from state table
+      # @return [Hash]
+      attr_reader :variables
 
       # @param [Device] device
       # @param [String] url_base
@@ -105,6 +108,7 @@ module RUPNP
         @control_url =  build_url(url_base, service[:control_url].to_s)
         @event_sub_url =  build_url(url_base, service[:event_sub_url].to_s)
         @actions = []
+        @variables = {}
 
         initialize_savon
       end
@@ -208,6 +212,23 @@ module RUPNP
           if @state_table.is_a? Hash
             @state_table = [@state_table]
           end
+
+           @state_table.each do |var|
+            name = var[:name]
+            if INTEGER_TYPES.include? var[:data_type]
+              value = var[:default_value] ||
+                var[:allowed_value_range][:minimum] || 0
+            elsif FLOAT_TYPES.include? var[:data_type]
+              value = var[:default_value] ||
+                var[:allowed_value_range][:minimum] || 0
+            elsif STRING_TYPES.include? var[:data_type]
+              value = var[:default_value] ||
+                var[:allowed_value_list][:allowed_value].first || ''
+            else
+              value = nil
+            end
+            @variables[name] = get_value_from_type(var[:data_type], value)
+          end
         end
       end
 
@@ -272,22 +293,26 @@ module RUPNP
         out_arg_name = snake_case(out_arg[:name]).to_sym
         value = resp.hash[:envelope][:body][action_response][out_arg_name]
 
-        transform_method = if INTEGER_TYPES.include? state_var[:data_type]
+        { out_arg_name => get_value_from_type(state_var[:data_type], value) }
+      end
+
+      def get_value_from_type(type, value)
+        transform_method = if INTEGER_TYPES.include? type
                              :to_i
-                           elsif FLOAT_TYPES.include? state_var[:data_type]
+                           elsif FLOAT_TYPES.include? type
                              :to_f
-                           elsif STRING_TYPES.include? state_var[:data_type]
+                           elsif STRING_TYPES.include? type
                              :to_s
                            end
         if transform_method
-          { out_arg_name => value.send(transform_method) }
+          value.send(transform_method)
         elsif TRUE_TYPES.include? state_var[:data_type]
-          {  out_arg_name => true }
+          true
         elsif FALSE_TYPES.include? state_var[:data_type]
-          {  out_arg_name => false }
+          false
         else
           log :warn, "SOAP response has an unknown type: #{state_var[:data_type]}"
-          {}
+          nil
         end
       end
 

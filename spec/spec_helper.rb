@@ -152,6 +152,17 @@ EOAL
     </stateVariable>
 EOSV
   end
+  scpd << <<EOSV2
+    <stateVariable sendEvents="#{opt[:send_event] ? 'yes' : 'no'}">
+      <name>X_variableStr</name>
+      <dataType>string</dataType>
+      <defaultValue>none</defaultValue>
+      <allowedValueList>
+        <allowedValue>none</allowedValue>
+        <allowedValue>another value</allowedValue>
+      </allowedValueList>
+    </stateVariable>
+EOSV2
   scpd << "  </serviceStateTable>\n</scpd>\n"
 end
 
