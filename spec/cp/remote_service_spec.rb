@@ -43,6 +43,11 @@ module RUPNP
               expect(rs.state_table[2][:default_value]).to eq('2')
               expect(rs.state_table[3][:allowed_value_range][:maximum]).
                 to eq('255')
+
+              expect(rs.variables['X_variableName1']).to be_a(Fixnum)
+              4.times do |i|
+                expect(rs.variables["X_variableName#{i+1}"]).to eq(i)
+              end
               done
             end
             rs.fetch
