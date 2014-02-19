@@ -157,9 +157,9 @@ module RUPNP
             rs.fetch
 
             EM.add_timer(1) do
-              conn = EM::HttpRequest.new('http://127.0.0.1:8080/events/2')
               event = class EventServer; @@events.last; end
-              p event
+              url = "http://127.0.0.1:8080#{event.callback_url}"
+              conn = EM::HttpRequest.new(url)
               send_notify_request(conn, 'SID' => event.sid)
             end
           end
