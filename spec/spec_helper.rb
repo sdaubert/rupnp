@@ -181,7 +181,7 @@ def event_body
 <?xml version="1.0"?>
 <e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
   <e:property>
-    <variableName>12</variableName>
+    <X_variableName1>12</variableName>
   </e:property>
 </e:propertyset>
 EOD

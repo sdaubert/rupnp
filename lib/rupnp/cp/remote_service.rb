@@ -147,7 +147,7 @@ module RUPNP
 
         port = cp.event_port
         num = self.class.event_sub_count
-        @callback_url = "http://#{HOST_IP}:#{port}/event#{num}"
+        @callback_url = "http://#{HOST_IP}:#{port}/events/#{num}"
 
         uri = URI(@event_sub_url)
         options[:timeout] ||= EVENT_SUB_DEFAULT_TIMEOUT
@@ -176,6 +176,8 @@ module RUPNP
             event = Event.new(@event_sub_url, URI(@callback_url).path,
                               http.response_header['SID'], timeout.to_i)
             EventServer.add_event event
+            log :info, 'event subscribtion registered'
+            log :debug, "event: #{event.inspect}"
             event.subscribe &blk
           end
         end

@@ -144,20 +144,23 @@ module RUPNP
         end
 
         it 'should subscribe to an event' do
-          pending
-          RUPNP.log_level = :debug
           em do
             rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
+              expect(rs.state_table.first[:name]).to eq('X_variableName1')
+              expect(rs.state_table.first[:name]).to eq('X_variableName1')
               rs.subscribe_to_event do |msg|
                 done
+                pending 'verify variable update'
               end
             end
             rs.fetch
 
-            EM.add_timer(0) do
-              conn = EM::HttpRequest.new('http://127.0.0.1:8080/event/1')
-              send_notify_request(conn)
+            EM.add_timer(1) do
+              conn = EM::HttpRequest.new('http://127.0.0.1:8080/events/2')
+              event = class EventServer; @@events.last; end
+              p event
+              send_notify_request(conn, 'SID' => event.sid)
             end
           end
         end
