@@ -40,7 +40,7 @@ module RUPNP
 
     # Process a HTTP request received from a service/device
     def process_http_request
-      log :debug, 'EventServer: receive request'
+      log :debug, "EventServer: receive request: #@http"
 
       response = EM::DelegatedHttpResponse.new(self)
 
@@ -94,9 +94,14 @@ module RUPNP
       end
 
       seq = @http[:seq].nil? ? 0 : @http[:seq].to_i
-      event << {
+      notification = {
         :seq => seq,
-        :content => Nori.new.parse(@http_content) }
+        :content => Nori.new.parse(@http_content)
+      }
+
+      log :debug, "send notification #{notification.inspect}\n" +
+        "    to #{event}"
+      event << notification
 
       response_status = 200
       response.send_response

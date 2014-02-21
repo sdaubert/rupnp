@@ -109,6 +109,12 @@ module RUPNP
         @event_sub_url =  build_url(url_base, service[:event_sub_url].to_s)
         @actions = []
         @variables = {}
+        @update_variables = EM::Channel.new
+
+        @update_variables.subscribe do |var, value|
+          @variables[var] = value
+          log :debug, "varibale #{var} set to #{value}"
+        end
 
         initialize_savon
       end
@@ -182,7 +188,21 @@ module RUPNP
             EventServer.add_event event
             log :info, 'event subscribtion registered'
             log :debug, "event: #{event.inspect}"
-            event.subscribe &blk
+
+            event.subscribe do |msg|
+              log :debug, "event #{event} received"
+              if msg.is_a? Hash and msg[:content].is_a? Hash
+                msg[:content].each do |k, v|
+                  if @variables.has_key? k
+                    log :info, "update evented variable #{k}"
+                    type = get_data_type_from_table(k)
+                    @update_variables << [k, get_value_from_type(type, v)]
+                  end
+                end
+              end
+              log :debug, "call user block"
+              blk.call(msg) if blk
+            end
           end
         end
       end
@@ -227,7 +247,9 @@ module RUPNP
             else
               value = nil
             end
-            @variables[name] = get_value_from_type(var[:data_type], value)
+
+            value = get_value_from_type(var[:data_type], value)
+            @update_variables << [name, value]
           end
         end
       end
@@ -306,14 +328,18 @@ module RUPNP
                            end
         if transform_method
           value.send(transform_method)
-        elsif TRUE_TYPES.include? state_var[:data_type]
+        elsif TRUE_TYPES.include? type
           true
-        elsif FALSE_TYPES.include? state_var[:data_type]
+        elsif FALSE_TYPES.include? type
           false
         else
-          log :warn, "SOAP response has an unknown type: #{state_var[:data_type]}"
+          log :warn, "SOAP response has an unknown type: #{type}"
           nil
         end
+      end
+
+      def get_data_type_from_table(var_name)
+        @state_table.find { |v| v[:name] == var_name }[:data_type]
       end
 
       def initialize_savon

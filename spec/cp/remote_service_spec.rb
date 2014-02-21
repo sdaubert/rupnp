@@ -154,11 +154,10 @@ module RUPNP
           em do
             rs.errback { fail 'RemoteService#fetch should work' }
             rs.callback do
-              expect(rs.state_table.first[:name]).to eq('X_variableName1')
-              expect(rs.state_table.first[:name]).to eq('X_variableName1')
+              expect(rs.variables['X_variableName1']).to eq(0)
               rs.subscribe_to_event do |msg|
+                expect(rs.variables['X_variableName1']).to eq(12)
                 done
-                pending 'verify variable update'
               end
             end
             rs.fetch
