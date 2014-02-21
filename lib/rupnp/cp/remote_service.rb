@@ -33,6 +33,21 @@ module RUPNP
     #
     # A Hash is returned, with a key for each <i>out</i> argument.
     #
+    # ==Evented variables
+    # Some variables in state (see {#state_table}, +:@send_events variable
+    # attribute) are evented. Events to update these variables are received
+    # only after subscription. To subscribe, use {#subscribe_to_event}.
+    #
+    # After subscribing to events, state variables are automagically updated
+    # on events. Their value may be accessed through {#variables}.
+    #
+    # A block may be passed to {#subscribe_to_event} to do a user action
+    # on receiving events.
+    #
+    #   service.subscribe_to_event do |msg|
+    #     puts "receive #{msg}"
+    #   end
+    #
     # @author Sylvain Daubert
     class RemoteService < Base
 
@@ -150,6 +165,7 @@ module RUPNP
       # @yieldparam [Event] event event received
       # @yieldparam [Object] msg message received
       # @return [Integer] subscribe id. May be used to unsubscribe on event
+      # @since 0.3.0
       def subscribe_to_event(options={}, &blk)
         cp = device.control_point
 
