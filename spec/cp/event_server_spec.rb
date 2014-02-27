@@ -132,8 +132,36 @@ module RUPNP
         EventServer.remove_event event
       end
 
-      it "should return updated variables through 'events' channel"
-      it 'should serve multiple URLs'
+      it 'should serve multiple URLs' do
+        em do
+          events = []
+          10.times do |i|
+            ev = Event.new('', "/events/#{i}", "uuid:#{UUID.generate}", 3600)
+            events << ev
+            EventServer.add_event ev
+          end
+
+          start_server
+          cnt = 0
+          10.times do |i|
+            url = "http://127.0.0.1:#{port}#{events[i].callback_url}"
+            req = EM::HttpRequest.new(url)
+            http = send_notify_request(req, 'SID' => events[i].sid)
+            http.errback { fail 'must not fail!' }
+            http.callback do
+              expect(http.response_header.status).to eq(200)
+              cnt += 1
+            end
+          end
+          tickloop = EM.tick_loop do
+            :stop if cnt >= 10
+          end
+          tickloop.on_stop do
+            events.each { |ev| EventServer.remove_event ev }
+            done
+          end
+        end
+      end
     end
 
   end
