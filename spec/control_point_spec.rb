@@ -148,8 +148,30 @@ module RUPNP
       expect(cp.find_device_by_udn(uuid3)).to be_nil
     end
 
-    it '#start_event_server should only start server if not already running'
-    it '#stopt_event_server should stop event server'
+    it '#start_event_server should only start server if ' +
+      'not already running' do
+      em do
+        expect(cp.event_port).to be_nil
+        cp.start_event_server
+        expect(cp.event_port).to eq(EVENT_SUB_DEFAULT_PORT)
+
+        expect{ cp.start_event_server(EVENT_SUB_DEFAULT_PORT+1) }.
+          to_not change { cp.event_port }
+        done
+      end
+    end
+
+    it '#stopt_event_server should stop event server' do
+      em do
+        expect(cp.event_port).to be_nil
+        cp.start_event_server
+        expect(cp.event_port).to eq(EVENT_SUB_DEFAULT_PORT)
+
+        expect { cp.stop_event_server }.to change { cp.event_port }.
+          from(EVENT_SUB_DEFAULT_PORT).to(nil)
+        done
+      end
+    end
   end
 
 end
