@@ -63,7 +63,18 @@ module RUPNP
       end
     end
 
-    it 'should cancel subscription'
+    it 'should cancel subscription' do
+      em do
+        stub_request(:unsubscribe, location).
+          with(:headers => { 'HOST' => host, 'SID' => sid }).
+          to_return(:status => 200)
+        ev.cancel_subscription
+        ev.subscribe do |msg|
+          expect(msg).to eq(:cancelled)
+          done
+        end
+      end
+    end
   end
 
 end
