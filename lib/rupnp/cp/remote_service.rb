@@ -252,14 +252,29 @@ module RUPNP
            @state_table.each do |var|
             name = var[:name]
             if INTEGER_TYPES.include? var[:data_type]
-              value = var[:default_value] ||
-                var[:allowed_value_range][:minimum] || 0
+              if var[:default_value]
+                value = var[:default_value]
+              elsif var[:allowed_value_range] && var[:allowed_value_range][:minimum]
+                value = var[:allowed_value_range][:minimum]
+              else
+                value = 0
+              end
             elsif FLOAT_TYPES.include? var[:data_type]
-              value = var[:default_value] ||
-                var[:allowed_value_range][:minimum] || 0
+              if var[:default_value]
+                value = var[:default_value]
+              elsif var[:allowed_value_range] && var[:allowed_value_range][:minimum]
+                value = var[:allowed_value_range][:minimum]
+              else
+                value = 0
+              end
             elsif STRING_TYPES.include? var[:data_type]
-              value = var[:default_value] ||
-                var[:allowed_value_list][:allowed_value].first || ''
+              if value = var[:default_value]
+                value = var[:default_value]
+              elsif var[:allowed_value_list] && var[:allowed_value_list][:allowed_value]
+                value = var[:allowed_value_list][:allowed_value]
+              else
+                value = ''
+              end
             else
               value = nil
             end
