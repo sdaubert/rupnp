@@ -237,8 +237,9 @@ module RUPNP
     def extract_icons
       return unless @description[:root][:device][:icon_list]
       @description[:root][:device][:icon_list][:icon].each do |h|
+        h = Hash[*h] if h.is_a? Array
         icon = OpenStruct.new(h)
-        icon.url = build_url(@url_base, icon.url)
+        icon.url = build_url(@url_base, icon.url) unless icon.url.nil?
         @icons << icon
       end
     end
