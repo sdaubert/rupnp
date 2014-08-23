@@ -214,7 +214,7 @@ module RUPNP
         @url_base =  @description[:root][:url_base]
         @url_base += '/' unless @url_base.end_with?('/')
       else
-        @url_base = @location.match(/[^\/]*\z/).pre_match
+        @url_base = @location.match('^.+?[^\/:](?=[?\/]|$)\/').to_s
       end
     end
 
