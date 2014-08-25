@@ -214,7 +214,7 @@ module RUPNP
         @url_base =  @description[:root][:url_base]
         @url_base += '/' unless @url_base.end_with?('/')
       else
-        @url_base = @location.match(/[^\/]*\z/).pre_match
+        @url_base = @location.match('^.+?[^\/:](?=[?\/]|$)\/').to_s
       end
     end
 
@@ -237,8 +237,9 @@ module RUPNP
     def extract_icons
       return unless @description[:root][:device][:icon_list]
       @description[:root][:device][:icon_list][:icon].each do |h|
+        h = Hash[*h] if h.is_a? Array
         icon = OpenStruct.new(h)
-        icon.url = build_url(@url_base, icon.url)
+        icon.url = build_url(@url_base, icon.url) unless icon.url.nil?
         @icons << icon
       end
     end

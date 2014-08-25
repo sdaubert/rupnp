@@ -291,7 +291,7 @@ module RUPNP
           @actions = scpd[:scpd][:action_list][:action]
           @actions = [@actions] unless @actions.is_a? Array
           @actions.each do |action|
-            action[:arguments] = action[:argument_list][:argument]
+            action[:arguments] = action[:argument_list][:argument] unless action[:argument_list].nil?
             action.delete :argument_list
             define_method_from_action action
           end
