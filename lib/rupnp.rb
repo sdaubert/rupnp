@@ -6,7 +6,7 @@ require 'eventmachine-le'
 module RUPNP
 
   # RUPNP version
-  VERSION = '0.3.0'
+  VERSION = '0.3.1'
 
   @logdev = STDERR
   @log_level = :info

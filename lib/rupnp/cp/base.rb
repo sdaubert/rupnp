@@ -23,7 +23,7 @@ module RUPNP
       }
 
       def initialize
-        @parser = Nori.new(:convert_tags_to => ->(tag){ tag.snakecase.to_sym })
+        @parser = Nori.new(:convert_tags_to => ->(tag){ snake_case(tag).to_sym })
       end
 
       # Get description from +location+
