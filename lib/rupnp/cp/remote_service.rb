@@ -378,11 +378,12 @@ module RUPNP
           globals.log_level :error
           globals.endpoint @control_url
           globals.namespace @type
-          globals.convert_request_keys_to :camel_case
+          globals.convert_request_keys_to :camelcase
           globals.log true
           globals.headers :HOST => "#{HOST_IP}"
           globals.env_namespace 's'
           globals.namespace_identifier 'u'
+          globals.convert_response_tags_to ->(tag){ snake_case(tag).to_sym }
         end
       end
 
